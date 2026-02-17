@@ -68,20 +68,20 @@ LOGO_TEXT = "Cards Against the Wasteland"
 
 # ── Design Constants — Hand Size (~35% scale) ─────────────────────────────────
 
-HAND_CARD_W = 300
-HAND_CARD_H = 420
+HAND_CARD_W = 250
+HAND_CARD_H = 400          # taller to accommodate larger text
 HAND_CORNER_R = 16
 HAND_CARD_PAD = 22
 HAND_TEXT_AREA_W = HAND_CARD_W - (HAND_CARD_PAD * 2)
 
-HAND_CARD_FONT_SIZE       = 22
-HAND_CARD_FONT_SIZE_SMALL = 17
-HAND_LOGO_FONT_SIZE       = 7
-HAND_PACK_FONT_SIZE       = 7
-HAND_NUMBER_FONT_SIZE     = 18
+HAND_CARD_FONT_SIZE       = 42   # was 22 — much more readable
+HAND_CARD_FONT_SIZE_SMALL = 34   # was 17 — for longer card texts
+HAND_LOGO_FONT_SIZE       = 16
+HAND_PACK_FONT_SIZE       = 16
+HAND_NUMBER_FONT_SIZE     = 24
 
-HAND_CARD_GAP   = 14
-HAND_CANVAS_PAD = 20
+HAND_CARD_GAP   = 16
+HAND_CANVAS_PAD = 24
 HAND_COLS       = 5
 
 
