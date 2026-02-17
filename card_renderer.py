@@ -35,8 +35,8 @@ FONT_REG_PATH  = _find_font(_FONT_PATHS_REG)
 
 # ── Design Constants — Full Size (in-game cards) ─────────────────────────────
 
-CARD_W = 840
-CARD_H = 1170
+CARD_W = 800
+CARD_H = 1200
 CORNER_R = 48
 CARD_PAD = 72
 TEXT_AREA_W = CARD_W - (CARD_PAD * 2)
@@ -57,11 +57,11 @@ LOGO_WHITE     = (0, 0, 0, 100)
 CARD_GAP   = 54
 CANVAS_PAD = 84
 
-CARD_FONT_SIZE       = 66
-CARD_FONT_SIZE_SMALL = 54
-LOGO_FONT_SIZE       = 18
-PACK_FONT_SIZE       = 18
-NUMBER_FONT_SIZE     = 48
+CARD_FONT_SIZE       = 120
+CARD_FONT_SIZE_SMALL = 96
+LOGO_FONT_SIZE       = 72
+PACK_FONT_SIZE       = 72
+NUMBER_FONT_SIZE     = 72
 
 LOGO_TEXT = "Cards Against the Wasteland"
 
@@ -74,10 +74,10 @@ HAND_CORNER_R = 16
 HAND_CARD_PAD = 22
 HAND_TEXT_AREA_W = HAND_CARD_W - (HAND_CARD_PAD * 2)
 
-HAND_CARD_FONT_SIZE       = 42   # was 22 — much more readable
-HAND_CARD_FONT_SIZE_SMALL = 34   # was 17 — for longer card texts
-HAND_LOGO_FONT_SIZE       = 16
-HAND_PACK_FONT_SIZE       = 16
+HAND_CARD_FONT_SIZE       = 40   # was 22 — much more readable
+HAND_CARD_FONT_SIZE_SMALL = 32   # was 17 — for longer card texts
+HAND_LOGO_FONT_SIZE       = 24
+HAND_PACK_FONT_SIZE       = 24
 HAND_NUMBER_FONT_SIZE     = 24
 
 HAND_CARD_GAP   = 16
