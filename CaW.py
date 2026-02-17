@@ -26,7 +26,16 @@ from typing import Optional
 
 TOKEN = os.environ.get("DISCORD_BOT_TOKEN", "YOUR_TOKEN_HERE")
 COMMAND_PREFIX = "!cah "
-CARDS_FILE = Path(__file__).parent / "cards.json"
+# Look for cards.json next to this script, then in CWD
+_script_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+if (_script_dir / "cards.json").exists():
+    CARDS_FILE = _script_dir / "cards.json"
+elif Path("cards.json").exists():
+    CARDS_FILE = Path("cards.json")
+else:
+    print(f"ERROR: cards.json not found in {_script_dir} or {Path.cwd()}")
+    print("Make sure cards.json is deployed alongside the bot script.")
+    exit(1)
 HAND_SIZE = 10
 MIN_PLAYERS = 3  # minimum players to start a round
 DEFAULT_WIN_SCORE = 7
