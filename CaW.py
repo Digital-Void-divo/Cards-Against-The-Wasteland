@@ -12,11 +12,14 @@ Setup:
 import discord
 from discord.ext import commands
 from discord import ui
-import json, random, asyncio, os
+import json, random, asyncio, os, io
 from pathlib import Path
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Optional
+
+# Card image renderer
+from card_renderer import render_black_card, render_judging, render_winner
 
 # ── Configuration ────────────────────────────────────────────────────────────
 
@@ -712,6 +715,10 @@ class CzarPickDropdown(ui.View):
         winning_cards = self.game.submissions[winner.id]
         filled = fmt_black(self.game.black_card, winning_cards)
 
+        # Render winner card image (black card with gold answers)
+        winner_img = render_winner(self.game.black_card["text"], winning_cards)
+        card_file = discord.File(winner_img, filename="winner.png")
+
         # Confirm to czar
         await interaction.response.edit_message(
             embed=discord.Embed(
@@ -720,12 +727,9 @@ class CzarPickDropdown(ui.View):
                 color=C.GREEN),
             view=None)
 
-        # Disable the channel judging button
-        # (We need the message — find it via the parent view)
-        # Just announce; the view timeout will clean up
-
         # Winner announcement in channel
         embed = discord.Embed(title="🏆 Round Winner!", color=C.GOLD)
+        embed.set_image(url="attachment://winner.png")
         embed.add_field(
             name=f"🎉 {winner.name} wins this round!",
             value=f"\n>>> {filled}", inline=False)
@@ -736,7 +740,7 @@ class CzarPickDropdown(ui.View):
         embed.add_field(
             name="Scoreboard",
             value=fmt_scores(self.game.players, compact=True), inline=False)
-        await self.game.channel.send(embed=embed)
+        await self.game.channel.send(embed=embed, file=card_file)
 
         # Check game over
         game_winner = self.game.check_game_over()
@@ -779,8 +783,12 @@ async def start_round(game: Game):
 
     non_czar = [game.players[pid].name for pid in game.players if pid != game.czar_id]
 
+    # Render black card image
+    card_img = render_black_card(black["text"], black["pick"])
+    card_file = discord.File(card_img, filename="black_card.png")
+
     embed = discord.Embed(title=f"━━━━ Round {game.round_number} ━━━━", color=C.BLACK)
-    embed.add_field(name="⬛ Black Card", value=f">>> {fmt_black(black)}", inline=False)
+    embed.set_image(url="attachment://black_card.png")
     embed.add_field(name="🎩 Card Czar", value=f"{czar.member.mention}", inline=True)
     embed.add_field(name="⏳ Waiting On", value=", ".join(non_czar), inline=True)
 
@@ -789,7 +797,7 @@ async def start_round(game: Game):
 
     view = RoundPlayView(game)
     game.round_view = view
-    msg = await game.channel.send(embed=embed, view=view)
+    msg = await game.channel.send(embed=embed, file=card_file, view=view)
     game._round_msg = msg
 
 
@@ -837,11 +845,19 @@ async def begin_judging_phase(game: Game):
     if game.round_view:
         game.round_view.stop()
 
+    # Render judging image (black card + all white submissions)
+    submission_cards = [cards for _, cards in entries]
+    judging_img = render_judging(
+        game.black_card["text"], game.black_card["pick"],
+        submission_cards, numbers=True)
+    card_file = discord.File(judging_img, filename="judging.png")
+
     embed = discord.Embed(
         title="⚖️ All Cards Are In!",
-        description=f"**Black Card:**\n>>> {fmt_black(game.black_card)}",
         color=C.PURPLE)
+    embed.set_image(url="attachment://judging.png")
 
+    # Also list them as text for accessibility / the dropdown
     subs_text = ""
     for i, (pid, cards) in enumerate(entries, 1):
         combined = " **┃** ".join(cards)
@@ -854,7 +870,7 @@ async def begin_judging_phase(game: Game):
         inline=False)
 
     view = JudgingButtonView(game, entries)
-    await game.channel.send(embed=embed, view=view)
+    await game.channel.send(embed=embed, file=card_file, view=view)
 
 
 # ── Bot Setup ────────────────────────────────────────────────────────────────
