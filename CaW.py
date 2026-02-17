@@ -6,7 +6,7 @@ Fully in-channel with ephemeral interactions. No DMs needed.
 Setup:
   1. pip install discord.py
   2. export DISCORD_BOT_TOKEN="your-token"
-  3. python bot.py
+  3. python CaW.py
 """
 
 import discord
@@ -181,6 +181,23 @@ class Game:
 
         # reference to the active round view so it persists
         self.round_view: Optional["RoundPlayView"] = None
+
+    @property
+    def pack_label(self) -> str:
+        """Combined pack names for card rendering."""
+        if not self.selected_packs:
+            return ""
+        names = []
+        for pid in self.selected_packs:
+            if pid in cards_db.packs:
+                # Strip emoji from pack name for cleaner card rendering
+                raw = cards_db.packs[pid]["name"]
+                cleaned = raw.strip()
+                # Remove leading emoji (if first char is non-ascii)
+                if cleaned and ord(cleaned[0]) > 127:
+                    cleaned = cleaned[1:].strip()
+                names.append(cleaned)
+        return " + ".join(names) if len(names) > 1 else (names[0] if names else "")
 
     def add_player(self, member: discord.Member) -> bool:
         if member.id in self.players:
@@ -716,7 +733,8 @@ class CzarPickDropdown(ui.View):
         filled = fmt_black(self.game.black_card, winning_cards)
 
         # Render winner card image (black card with gold answers)
-        winner_img = render_winner(self.game.black_card["text"], winning_cards)
+        winner_img = render_winner(self.game.black_card["text"], winning_cards,
+                                   pack_name=self.game.pack_label)
         card_file = discord.File(winner_img, filename="winner.png")
 
         # Confirm to czar
@@ -784,7 +802,7 @@ async def start_round(game: Game):
     non_czar = [game.players[pid].name for pid in game.players if pid != game.czar_id]
 
     # Render black card image
-    card_img = render_black_card(black["text"], black["pick"])
+    card_img = render_black_card(black["text"], black["pick"], pack_name=game.pack_label)
     card_file = discord.File(card_img, filename="black_card.png")
 
     embed = discord.Embed(title=f"━━━━ Round {game.round_number} ━━━━", color=C.BLACK)
@@ -849,7 +867,7 @@ async def begin_judging_phase(game: Game):
     submission_cards = [cards for _, cards in entries]
     judging_img = render_judging(
         game.black_card["text"], game.black_card["pick"],
-        submission_cards, numbers=True)
+        submission_cards, numbers=True, pack_name=game.pack_label)
     card_file = discord.File(judging_img, filename="judging.png")
 
     embed = discord.Embed(
