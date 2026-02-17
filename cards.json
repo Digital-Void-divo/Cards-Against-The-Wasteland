@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "name": "Cards Against Humanity",
+    "name": "Cards Against the Wasteland",
     "description": "Multi-pack card database. Add new packs by creating a new key under 'packs'. Black cards use _ for blanks.",
     "version": "2.0.0",
     "license": "Creative Commons BY-NC-SA 4.0"
