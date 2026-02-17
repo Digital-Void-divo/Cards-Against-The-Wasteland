@@ -478,7 +478,7 @@ def render_black_card(card_text: str, pick: int = 1,
     """Render just the black card (round start). Returns BytesIO PNG."""
     display_text = card_text.replace("_", "_____")
     if pick > 1:
-        display_text += f"\n\nPICK {pick}"
+        display_text += f"\n\n\n(PICK {pick})"
     img = Image.new("RGB", (CARD_W + CANVAS_PAD * 2, CARD_H + CANVAS_PAD * 2), BG_COLOR)
     _draw_card(img, CANVAS_PAD, CANVAS_PAD, is_black=True, text=display_text,
                bold=True, pack_id=pack_id, pack_name=pack_name)
