@@ -63,9 +63,10 @@ CANVAS_PAD = 28
 # Font sizes
 CARD_FONT_SIZE = 22
 CARD_FONT_SIZE_SMALL = 18  # for longer text
-LOGO_FONT_SIZE = 11
+LOGO_FONT_SIZE = 9
 NUMBER_FONT_SIZE = 16
 FILLED_FONT_SIZE = 22
+LOGO_TEXT = "Cards Against the Wasteland"
 
 
 # ── Font Loading ─────────────────────────────────────────────────────────────
@@ -154,7 +155,8 @@ def _draw_shadow(img: Image.Image, x: int, y: int, w: int, h: int, offset: int =
 
 
 def _draw_card(img: Image.Image, x: int, y: int, is_black: bool,
-               text: str, number: int = None, bold: bool = True):
+               text: str, number: int = None, bold: bool = True,
+               pack_name: str = None):
     """Draw a single card at position (x, y) on the image."""
     draw = ImageDraw.Draw(img)
 
@@ -185,17 +187,15 @@ def _draw_card(img: Image.Image, x: int, y: int, is_black: bool,
         draw.text((x + CARD_PAD, ty), line, fill=fg, font=font)
         ty += line_h + spacing
 
-    # "Cards Against Humanity" logo at bottom
-    logo_font = _load_font(FONT_BOLD_PATH, LOGO_FONT_SIZE)
-    logo_text = "Cards Against Humanity"
-    logo_bbox = logo_font.getbbox(logo_text)
-    logo_w = logo_bbox[2] - logo_bbox[0]
-    draw.text((x + CARD_PAD, y + CARD_H - 32), logo_text, fill=logo_col, font=logo_font)
-
-    # Small card icon before the logo (simple rectangle representation)
-    icon_x = x + CARD_PAD + logo_w + 6
-    icon_y = y + CARD_H - 30
-    # Just skip if it'd go off-card
+    # Logo at bottom
+    logo_font = _load_font(FONT_REG_PATH, LOGO_FONT_SIZE)
+    logo_line = LOGO_TEXT
+    if pack_name:
+        logo_line += f" - {pack_name}"
+    # Truncate if too long for the card
+    while logo_font.getbbox(logo_line)[2] - logo_font.getbbox(logo_line)[0] > TEXT_AREA_W and len(logo_line) > 20:
+        logo_line = logo_line[:-2] + "…"
+    draw.text((x + CARD_PAD, y + CARD_H - 32), logo_line, fill=logo_col, font=logo_font)
 
     # Number badge (for submission numbering)
     if number is not None:
@@ -216,7 +216,8 @@ def _draw_card(img: Image.Image, x: int, y: int, is_black: bool,
 
 
 def _draw_black_card_filled(img: Image.Image, x: int, y: int,
-                            card_text: str, answers: list[str]):
+                            card_text: str, answers: list[str],
+                            pack_name: str = None):
     """Draw a black card with blanks filled in with gold answer text."""
     draw = ImageDraw.Draw(img)
 
@@ -295,8 +296,13 @@ def _draw_black_card_filled(img: Image.Image, x: int, y: int,
                 char_idx += 1
 
     # Logo
-    logo_font = _load_font(FONT_BOLD_PATH, LOGO_FONT_SIZE)
-    draw.text((x + CARD_PAD, y + CARD_H - 32), "Cards Against Humanity",
+    logo_font = _load_font(FONT_REG_PATH, LOGO_FONT_SIZE)
+    logo_line = LOGO_TEXT
+    if pack_name:
+        logo_line += f" - {pack_name}"
+    while logo_font.getbbox(logo_line)[2] - logo_font.getbbox(logo_line)[0] > TEXT_AREA_W and len(logo_line) > 20:
+        logo_line = logo_line[:-2] + "…"
+    draw.text((x + CARD_PAD, y + CARD_H - 32), logo_line,
               fill=LOGO_BLACK[:3], font=logo_font)
 
 
@@ -309,7 +315,7 @@ def _draw_blank_lines(img: Image.Image, draw: ImageDraw.Draw,
 
 # ── Public API ───────────────────────────────────────────────────────────────
 
-def render_black_card(card_text: str, pick: int = 1) -> io.BytesIO:
+def render_black_card(card_text: str, pick: int = 1, pack_name: str = None) -> io.BytesIO:
     """
     Render just the black card (for round start).
     Returns a BytesIO PNG.
@@ -322,7 +328,8 @@ def render_black_card(card_text: str, pick: int = 1) -> io.BytesIO:
     canvas_h = CARD_H + CANVAS_PAD * 2
 
     img = Image.new("RGB", (canvas_w, canvas_h), BG_COLOR)
-    _draw_card(img, CANVAS_PAD, CANVAS_PAD, is_black=True, text=display_text, bold=True)
+    _draw_card(img, CANVAS_PAD, CANVAS_PAD, is_black=True, text=display_text,
+               bold=True, pack_name=pack_name)
 
     buf = io.BytesIO()
     img.save(buf, format="PNG", optimize=True)
@@ -332,7 +339,8 @@ def render_black_card(card_text: str, pick: int = 1) -> io.BytesIO:
 
 def render_judging(card_text: str, pick: int,
                    submissions: list[list[str]],
-                   numbers: bool = True) -> io.BytesIO:
+                   numbers: bool = True,
+                   pack_name: str = None) -> io.BytesIO:
     """
     Render black card + all white submission cards.
     submissions: list of [card_text, ...] per player (pick-2 = 2 cards per entry).
@@ -364,7 +372,8 @@ def render_judging(card_text: str, pick: int,
 
     # Draw black card (centered vertically)
     bc_y = CANVAS_PAD + (total_card_h - CARD_H) // 2
-    _draw_card(img, CANVAS_PAD, bc_y, is_black=True, text=display_text, bold=True)
+    _draw_card(img, CANVAS_PAD, bc_y, is_black=True, text=display_text,
+               bold=True, pack_name=pack_name)
 
     # Draw white submission cards
     wx = CANVAS_PAD + CARD_W + CARD_GAP * 2
@@ -373,7 +382,8 @@ def render_judging(card_text: str, pick: int,
         for j, card_text in enumerate(sub_cards):
             wy = CANVAS_PAD + j * (CARD_H + CARD_GAP)
             _draw_card(img, wx, wy, is_black=False, text=card_text,
-                      number=num if j == 0 else None, bold=False)
+                      number=num if j == 0 else None, bold=False,
+                      pack_name=pack_name)
         wx += col_w + CARD_GAP
 
     buf = io.BytesIO()
@@ -382,7 +392,7 @@ def render_judging(card_text: str, pick: int,
     return buf
 
 
-def render_winner(card_text: str, answers: list[str]) -> io.BytesIO:
+def render_winner(card_text: str, answers: list[str], pack_name: str = None) -> io.BytesIO:
     """
     Render the black card with answers filled in (gold text).
     Returns a BytesIO PNG.
@@ -391,7 +401,8 @@ def render_winner(card_text: str, answers: list[str]) -> io.BytesIO:
     canvas_h = CARD_H + CANVAS_PAD * 2
 
     img = Image.new("RGB", (canvas_w, canvas_h), BG_COLOR)
-    _draw_black_card_filled(img, CANVAS_PAD, CANVAS_PAD, card_text, answers)
+    _draw_black_card_filled(img, CANVAS_PAD, CANVAS_PAD, card_text, answers,
+                            pack_name=pack_name)
 
     buf = io.BytesIO()
     img.save(buf, format="PNG", optimize=True)
@@ -402,10 +413,12 @@ def render_winner(card_text: str, answers: list[str]) -> io.BytesIO:
 # ── Quick test ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    PACK = "Standard Pack"
+
     # Test 1: Black card alone
     buf1 = render_black_card(
         "In his newest and most difficult stunt, David Blaine must escape from _.",
-        pick=1
+        pick=1, pack_name=PACK
     )
     with open("/tmp/test_black.png", "wb") as f:
         f.write(buf1.read())
@@ -419,7 +432,8 @@ if __name__ == "__main__":
             ["My inner demons."],
             ["A 55-gallon drum of lube."],
             ["The entire Mormon Tabernacle Choir."],
-        ]
+        ],
+        pack_name=PACK
     )
     with open("/tmp/test_judging.png", "wb") as f:
         f.write(buf2.read())
@@ -428,7 +442,8 @@ if __name__ == "__main__":
     # Test 3: Winner with filled text
     buf3 = render_winner(
         "In his newest and most difficult stunt, David Blaine must escape from _.",
-        ["my inner demons"]
+        ["my inner demons"],
+        pack_name=PACK
     )
     with open("/tmp/test_winner.png", "wb") as f:
         f.write(buf3.read())
@@ -441,7 +456,8 @@ if __name__ == "__main__":
         submissions=[
             ["Getting really high.", "Puppies!"],
             ["Racism.", "A balanced breakfast."],
-        ]
+        ],
+        pack_name="Geek Pack"
     )
     with open("/tmp/test_pick2.png", "wb") as f:
         f.write(buf4.read())
@@ -450,7 +466,8 @@ if __name__ == "__main__":
     # Test 5: Pick 2 winner
     buf5 = render_winner(
         "Step 1: _. Step 2: _. Step 3: Profit.",
-        ["Getting really high", "Puppies"]
+        ["Getting really high", "Puppies"],
+        pack_name="Geek Pack"
     )
     with open("/tmp/test_winner2.png", "wb") as f:
         f.write(buf5.read())
