@@ -1,5 +1,5 @@
 """
-card_renderer.py — Generates Cards Against Humanity card images.
+card_renderer.py — Generates Cards Against the Wasteland card images.
 
 Produces images for four game phases:
   1. Round start:  Black card only on a dark table
