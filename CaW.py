@@ -1116,6 +1116,39 @@ async def cah_end(ctx: commands.Context):
     del active_games[ctx.channel.id]
 
 
+@bot.command(name="drawtest")
+async def cah_drawtest(ctx: commands.Context):
+    """Hidden test command — draws one random white and one random black card and renders them."""
+    all_whites: list[str] = []
+    all_blacks: list[dict] = []
+    white_pack_map: dict[str, str] = {}
+    for pid, pack in cards_db.packs.items():
+        pack_name = pack["name"]
+        for w in pack["white"]:
+            all_whites.append(w)
+            white_pack_map[w] = pack_name
+        for b in pack["black"]:
+            all_blacks.append({**b, "pack": pack_name})
+
+    white = random.choice(all_whites)
+    black = random.choice(all_blacks)
+
+    black_img = render_black_card(black["text"], black["pick"], pack_name=black.get("pack", ""))
+    black_file = discord.File(black_img, filename="black_card.png")
+
+    white_img = render_hand(
+        [white],
+        white_packs={white: white_pack_map.get(white, "")})
+    white_file = discord.File(white_img, filename="white_card.png")
+
+    await ctx.send(
+        embed=discord.Embed(
+            title="🧪 Draw Test",
+            description=f"⬛ **Black:** {black['text']}\n\n⬜ **White:** {white}",
+            color=C.DARK),
+        files=[black_file, white_file])
+
+
 @bot.event
 async def on_command_error(ctx: commands.Context, error):
     if isinstance(error, commands.CommandNotFound):
