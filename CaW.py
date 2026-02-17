@@ -225,6 +225,8 @@ class Game:
     def setup_deck(self, pack_ids: list[str], db: CardDB):
         self.selected_packs = pack_ids
         whites, blacks, white_pack = db.build_deck(pack_ids)
+        random.shuffle(whites)   # extra shuffle before deck is built
+        random.shuffle(blacks)
         self.deck = Deck(whites, blacks)
         self.white_pack = white_pack
 
