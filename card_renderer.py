@@ -14,29 +14,109 @@ from pathlib import Path
 
 # ── Font Setup ───────────────────────────────────────────────────────────────
 
-_FONT_PATHS_BOLD = [
-    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-]
-_FONT_PATHS_REG = [
-    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-]
+def _find_font(bold: bool = False) -> str:
+    """
+    Search common system font locations for a usable sans-serif font.
+    Checks Linux, macOS, and Windows paths. Returns the first found path,
+    or None if nothing is found (PIL will use its tiny fallback bitmap font).
 
-def _find_font(paths: list[str]) -> str:
-    for p in paths:
+    If a file called font.otf or font.ttf exists in the same directory
+    as this script, it will always be used first for both bold and regular.
+    """
+    _here = os.path.dirname(os.path.abspath(__file__))
+    for local_name in ("font.otf", "font.ttf", "Font.otf", "Font.ttf"):
+        local_path = os.path.join(_here, local_name)
+        if os.path.exists(local_path):
+            print(f"[card_renderer] Using local font: {local_path}")
+            return local_path
+
+    candidates_bold = [
+        # Linux — Liberation (Helvetica-compatible)
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        "/usr/share/fonts/liberation/LiberationSans-Bold.ttf",
+        # Linux — DejaVu
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
+        # Linux — Noto
+        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
+        "/usr/share/fonts/noto/NotoSans-Bold.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSans-ExtraBold.ttf",
+        # Linux — Ubuntu font
+        "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf",
+        "/usr/share/fonts/truetype/ubuntu/Ubuntu-Bold.ttf",
+        # macOS
+        "/System/Library/Fonts/Helvetica.ttc",
+        "/System/Library/Fonts/HelveticaNeue.ttc",
+        "/Library/Fonts/Arial Bold.ttf",
+        "/System/Library/Fonts/SFNSDisplay-Bold.otf",
+        # Windows
+        "C:/Windows/Fonts/arialbd.ttf",
+        "C:/Windows/Fonts/calibrib.ttf",
+        "C:/Windows/Fonts/verdanab.ttf",
+    ]
+    candidates_reg = [
+        # Linux — Liberation
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/usr/share/fonts/liberation/LiberationSans-Regular.ttf",
+        # Linux — DejaVu
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+        # Linux — Noto
+        "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+        "/usr/share/fonts/noto/NotoSans-Regular.ttf",
+        # Linux — Ubuntu
+        "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf",
+        "/usr/share/fonts/truetype/ubuntu/Ubuntu-Regular.ttf",
+        # macOS
+        "/System/Library/Fonts/Helvetica.ttc",
+        "/Library/Fonts/Arial.ttf",
+        "/System/Library/Fonts/SFNSDisplay.otf",
+        # Windows
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/calibri.ttf",
+        "C:/Windows/Fonts/verdana.ttf",
+    ]
+    candidates = candidates_bold if bold else candidates_reg
+    for p in candidates:
         if os.path.exists(p):
             return p
-    return paths[-1]
 
-FONT_BOLD_PATH = _find_font(_FONT_PATHS_BOLD)
-FONT_REG_PATH  = _find_font(_FONT_PATHS_REG)
+    # Last resort: walk common font directories looking for any .ttf
+    search_dirs = [
+        "/usr/share/fonts",
+        "/usr/local/share/fonts",
+        os.path.expanduser("~/.fonts"),
+        "/Library/Fonts",
+        "C:/Windows/Fonts",
+    ]
+    for d in search_dirs:
+        if os.path.isdir(d):
+            for root, _, files in os.walk(d):
+                for f in files:
+                    if f.lower().endswith(".ttf") or f.lower().endswith(".otf"):
+                        return os.path.join(root, f)
+
+    return None   # will trigger load_default() in _load_font
+
+
+FONT_BOLD_PATH = _find_font(bold=True)
+FONT_REG_PATH  = _find_font(bold=False)
+
+if FONT_BOLD_PATH:
+    print(f"[card_renderer] Bold font:    {FONT_BOLD_PATH}")
+else:
+    print("[card_renderer] WARNING: No bold font found — text will be tiny! Install fonts-liberation or fonts-dejavu.")
+
+if FONT_REG_PATH:
+    print(f"[card_renderer] Regular font: {FONT_REG_PATH}")
+else:
+    print("[card_renderer] WARNING: No regular font found — text will be tiny!")
 
 
 # ── Design Constants — Full Size (in-game cards) ─────────────────────────────
 
-CARD_W = 800
-CARD_H = 1200
+CARD_W = 840
+CARD_H = 1170
 CORNER_R = 48
 CARD_PAD = 72
 TEXT_AREA_W = CARD_W - (CARD_PAD * 2)
@@ -57,40 +137,45 @@ LOGO_WHITE     = (0, 0, 0, 100)
 CARD_GAP   = 54
 CANVAS_PAD = 84
 
-CARD_FONT_SIZE       = 120
-CARD_FONT_SIZE_SMALL = 96
-LOGO_FONT_SIZE       = 72
-PACK_FONT_SIZE       = 72
-NUMBER_FONT_SIZE     = 72
+CARD_FONT_SIZE       = 66
+CARD_FONT_SIZE_SMALL = 54
+LOGO_FONT_SIZE       = 18
+PACK_FONT_SIZE       = 18
+NUMBER_FONT_SIZE     = 48
 
 LOGO_TEXT = "Cards Against the Wasteland"
 
 
 # ── Design Constants — Hand Size (~35% scale) ─────────────────────────────────
 
-HAND_CARD_W = 250
-HAND_CARD_H = 400          # taller to accommodate larger text
+HAND_CARD_W = 300
+HAND_CARD_H = 500          # taller to accommodate larger text
 HAND_CORNER_R = 16
 HAND_CARD_PAD = 22
 HAND_TEXT_AREA_W = HAND_CARD_W - (HAND_CARD_PAD * 2)
 
-HAND_CARD_FONT_SIZE       = 40   # was 22 — much more readable
-HAND_CARD_FONT_SIZE_SMALL = 32   # was 17 — for longer card texts
-HAND_LOGO_FONT_SIZE       = 24
-HAND_PACK_FONT_SIZE       = 24
-HAND_NUMBER_FONT_SIZE     = 24
+HAND_CARD_FONT_SIZE       = 38   # was 22 — much more readable
+HAND_CARD_FONT_SIZE_SMALL = 30   # was 17 — for longer card texts
+HAND_LOGO_FONT_SIZE       = 9
+HAND_PACK_FONT_SIZE       = 9
+HAND_NUMBER_FONT_SIZE     = 20
 
-HAND_CARD_GAP   = 16
-HAND_CANVAS_PAD = 24
+HAND_CARD_GAP   = 14
+HAND_CANVAS_PAD = 20
 HAND_COLS       = 5
 
 
 # ── Font Loading ─────────────────────────────────────────────────────────────
 
-def _load_font(path: str, size: int) -> ImageFont.FreeTypeFont:
+def _load_font(path, size: int):
+    if path and os.path.exists(path):
+        try:
+            return ImageFont.truetype(path, size)
+        except (OSError, IOError):
+            pass
     try:
-        return ImageFont.truetype(path, size)
-    except (OSError, IOError):
+        return ImageFont.load_default(size=size)
+    except TypeError:
         return ImageFont.load_default()
 
 def _get_card_font(text: str, bold: bool = True) -> ImageFont.FreeTypeFont:
