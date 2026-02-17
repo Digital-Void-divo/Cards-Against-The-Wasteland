@@ -1,22 +1,18 @@
 """
-Cards Against Humanity — Discord Bot
-=====================================
-A fully-featured CAH game bot supporting ad-hoc rounds and full scored games.
+Cards Against Humanity — Discord Bot  v3.0
+============================================
+Fully in-channel with ephemeral interactions. No DMs needed.
 
 Setup:
   1. pip install discord.py
-  2. Set your bot token in .env or pass it directly
+  2. export DISCORD_BOT_TOKEN="your-token"
   3. python bot.py
-
-Commands are prefixed with !cah (configurable below).
 """
 
 import discord
 from discord.ext import commands
-import json
-import random
-import asyncio
-import os
+from discord import ui
+import json, random, asyncio, os
 from pathlib import Path
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -26,7 +22,12 @@ from typing import Optional
 
 TOKEN = os.environ.get("DISCORD_BOT_TOKEN", "YOUR_TOKEN_HERE")
 COMMAND_PREFIX = "!cah "
-# Look for cards.json next to this script, then in CWD
+HAND_SIZE = 10
+MIN_PLAYERS = 3
+DEFAULT_WIN_SCORE = 7
+BLANK = "▬▬▬▬▬"
+
+# Card file — checks script dir then cwd
 _script_dir = Path(os.path.dirname(os.path.abspath(__file__)))
 if (_script_dir / "cards.json").exists():
     CARDS_FILE = _script_dir / "cards.json"
@@ -34,33 +35,65 @@ elif Path("cards.json").exists():
     CARDS_FILE = Path("cards.json")
 else:
     print(f"ERROR: cards.json not found in {_script_dir} or {Path.cwd()}")
-    print("Make sure cards.json is deployed alongside the bot script.")
     exit(1)
-HAND_SIZE = 10
-MIN_PLAYERS = 3  # minimum players to start a round
-DEFAULT_WIN_SCORE = 7
-CZAR_PICK_EMOJI = "🃏"
-SUBMIT_TIMEOUT = 180   # seconds for players to submit cards
-JUDGE_TIMEOUT = 180    # seconds for czar to pick
+
+
+# ── Colors ───────────────────────────────────────────────────────────────────
+
+class C:
+    BLACK   = 0x1a1a1a
+    WHITE   = 0xf5f5f5
+    GOLD    = 0xf1c40f
+    GREEN   = 0x2ecc71
+    BLUE    = 0x3498db
+    PURPLE  = 0x9b59b6
+    RED     = 0xe74c3c
+    ORANGE  = 0xe67e22
+    DARK    = 0x2c2f33
+
 
 # ── Card Database ────────────────────────────────────────────────────────────
 
 class CardDB:
-    """Loads and manages the card pools. Reshuffles discards when deck runs out."""
-
     def __init__(self, path: str | Path):
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        self._all_white: list[str] = list(data["white"])
-        self._all_black: list[dict] = list(data["black"])
-        self.reset()
+        self.packs: dict[str, dict] = data["packs"]
 
-    # ── public api ──
+    @property
+    def pack_ids(self) -> list[str]:
+        return list(self.packs.keys())
 
-    def reset(self):
-        """Shuffle fresh copies of both decks."""
-        self.white_draw = list(self._all_white)
-        self.black_draw = list(self._all_black)
+    def pack_info(self, pack_id: str) -> dict:
+        p = self.packs[pack_id]
+        return {
+            "name": p["name"],
+            "description": p.get("description", ""),
+            "white_count": len(p["white"]),
+            "black_count": len(p["black"]),
+        }
+
+    def build_deck(self, pack_ids: list[str]) -> tuple[list[str], list[dict]]:
+        whites, blacks = [], []
+        for pid in pack_ids:
+            if pid in self.packs:
+                whites.extend(self.packs[pid]["white"])
+                blacks.extend(self.packs[pid]["black"])
+        return whites, blacks
+
+    @property
+    def total_white(self) -> int:
+        return sum(len(p["white"]) for p in self.packs.values())
+
+    @property
+    def total_black(self) -> int:
+        return sum(len(p["black"]) for p in self.packs.values())
+
+
+class Deck:
+    def __init__(self, whites: list[str], blacks: list[dict]):
+        self.white_draw = list(whites)
+        self.black_draw = list(blacks)
         self.white_discard: list[str] = []
         self.black_discard: list[dict] = []
         random.shuffle(self.white_draw)
@@ -71,7 +104,7 @@ class CardDB:
         for _ in range(n):
             if not self.white_draw:
                 if not self.white_discard:
-                    raise RuntimeError("No white cards remaining at all!")
+                    raise RuntimeError("No white cards left!")
                 self.white_draw = self.white_discard
                 self.white_discard = []
                 random.shuffle(self.white_draw)
@@ -81,7 +114,7 @@ class CardDB:
     def draw_black(self) -> dict:
         if not self.black_draw:
             if not self.black_discard:
-                raise RuntimeError("No black cards remaining at all!")
+                raise RuntimeError("No black cards left!")
             self.black_draw = self.black_discard
             self.black_discard = []
             random.shuffle(self.black_draw)
@@ -93,32 +126,26 @@ class CardDB:
     def discard_black(self, card: dict):
         self.black_discard.append(card)
 
-    @property
-    def total_white(self) -> int:
-        return len(self._all_white)
-
-    @property
-    def total_black(self) -> int:
-        return len(self._all_black)
-
 
 # ── Game State ───────────────────────────────────────────────────────────────
 
 class Phase(Enum):
-    LOBBY = auto()      # waiting for players to join
-    PLAYING = auto()    # players submitting white cards
-    JUDGING = auto()    # card czar picking a winner
-    FINISHED = auto()   # game over
+    LOBBY    = auto()
+    PACKS    = auto()
+    PLAYING  = auto()
+    JUDGING  = auto()
+    FINISHED = auto()
 
 class GameMode(Enum):
-    ADHOC = auto()      # single round, no score tracking (still tracks for fun)
-    FULL = auto()       # play to a target score
+    ADHOC = auto()
+    FULL  = auto()
 
 @dataclass
 class Player:
     member: discord.Member
     hand: list[str] = field(default_factory=list)
     score: int = 0
+    pending_picks: list[str] = field(default_factory=list)
 
     @property
     def name(self) -> str:
@@ -130,54 +157,48 @@ class Player:
 
 
 class Game:
-    """
-    Represents one game session in a channel.
-    """
-
     def __init__(self, channel: discord.TextChannel, host: discord.Member,
-                 mode: GameMode, win_score: int, cards: CardDB):
+                 mode: GameMode, win_score: int):
         self.channel = channel
         self.host = host
         self.mode = mode
         self.win_score = win_score
-        self.cards = cards
-        self.cards.reset()
+        self.deck: Optional[Deck] = None
+        self.selected_packs: list[str] = []
 
         self.phase = Phase.LOBBY
-        self.players: dict[int, Player] = {}        # member_id -> Player
-        self.czar_order: list[int] = []              # rotating list of player ids
+        self.players: dict[int, Player] = {}
+        self.czar_order: list[int] = []
         self.czar_index: int = 0
         self.round_number: int = 0
 
-        # current round state
         self.black_card: Optional[dict] = None
-        self.submissions: dict[int, list[str]] = {}  # player_id -> played white cards
-        self.submission_order: list[int] = []         # randomised order for display
-        self.round_message: Optional[discord.Message] = None
+        self.submissions: dict[int, list[str]] = {}
+        self.submission_order: list[int] = []
 
-    # ── Player management ──
+        # reference to the active round view so it persists
+        self.round_view: Optional["RoundPlayView"] = None
 
     def add_player(self, member: discord.Member) -> bool:
         if member.id in self.players:
             return False
-        p = Player(member=member)
-        self.players[member.id] = p
+        self.players[member.id] = Player(member=member)
         self.czar_order.append(member.id)
         return True
 
     def remove_player(self, member_id: int) -> Optional[Player]:
         p = self.players.pop(member_id, None)
         if p:
-            self.cards.discard_white(p.hand)
+            if self.deck:
+                self.deck.discard_white(p.hand)
+                self.deck.discard_white(p.pending_picks)
             if member_id in self.czar_order:
-                idx = self.czar_order.index(member_id)
                 self.czar_order.remove(member_id)
-                # adjust czar_index if needed
                 if self.czar_index >= len(self.czar_order) and self.czar_order:
                     self.czar_index = 0
-            # remove their submission if any
             if member_id in self.submissions:
-                self.cards.discard_white(self.submissions.pop(member_id))
+                if self.deck:
+                    self.deck.discard_white(self.submissions.pop(member_id))
                 if member_id in self.submission_order:
                     self.submission_order.remove(member_id)
         return p
@@ -193,64 +214,45 @@ class Game:
         cid = self.czar_id
         return self.players.get(cid) if cid else None
 
-    # ── Round lifecycle ──
+    def setup_deck(self, pack_ids: list[str], db: CardDB):
+        self.selected_packs = pack_ids
+        whites, blacks = db.build_deck(pack_ids)
+        self.deck = Deck(whites, blacks)
 
     def start_round(self) -> dict:
-        """Begin a new round. Returns the black card."""
         self.round_number += 1
         self.phase = Phase.PLAYING
         self.submissions.clear()
         self.submission_order.clear()
-
-        # draw black card
-        self.black_card = self.cards.draw_black()
-
-        # deal up to HAND_SIZE for each non-czar player
+        self.black_card = self.deck.draw_black()
         for pid, player in self.players.items():
+            player.pending_picks.clear()
             deficit = HAND_SIZE - len(player.hand)
             if deficit > 0:
-                player.hand.extend(self.cards.draw_white(deficit))
-
+                player.hand.extend(self.deck.draw_white(deficit))
         return self.black_card
 
-    def submit_cards(self, player_id: int, indices: list[int]) -> list[str]:
-        """
-        Player submits card(s) by index (1-based).
-        Returns the played cards. Raises ValueError on bad input.
-        """
+    def submit_card_by_value(self, player_id: int, card_text: str):
         player = self.players[player_id]
-        pick = self.black_card["pick"]
+        if card_text in player.hand:
+            player.hand.remove(card_text)
+            player.pending_picks.append(card_text)
 
-        if len(indices) != pick:
-            raise ValueError(f"You must play exactly **{pick}** card(s). You played {len(indices)}.")
+    def finalize_submission(self, player_id: int):
+        player = self.players[player_id]
+        self.submissions[player_id] = list(player.pending_picks)
+        player.pending_picks.clear()
 
-        # validate indices
-        for i in indices:
-            if i < 1 or i > len(player.hand):
-                raise ValueError(f"Invalid card number **{i}**. Your hand has {len(player.hand)} cards.")
-
-        # check for duplicates
-        if len(set(indices)) != len(indices):
-            raise ValueError("You can't play the same card twice.")
-
-        # pull cards out (sort descending so indices don't shift)
-        played = []
-        for i in sorted(indices, reverse=True):
-            played.insert(0, player.hand.pop(i - 1))
-
-        self.submissions[player_id] = played
-        return played
+    def cancel_pending(self, player_id: int):
+        player = self.players[player_id]
+        player.hand.extend(player.pending_picks)
+        player.pending_picks.clear()
 
     def all_submitted(self) -> bool:
-        """Check if all non-czar players have submitted."""
         expected = {pid for pid in self.players if pid != self.czar_id}
         return expected == set(self.submissions.keys())
 
     def begin_judging(self) -> list[tuple[int, list[str]]]:
-        """
-        Transition to judging phase. Returns shuffled (player_id, cards) pairs.
-        The display order is randomised so the czar can't tell who played what.
-        """
         self.phase = Phase.JUDGING
         entries = list(self.submissions.items())
         random.shuffle(entries)
@@ -258,29 +260,20 @@ class Game:
         return entries
 
     def pick_winner(self, choice: int) -> Player:
-        """
-        Czar picks a winner by display number (1-based).
-        Returns the winning Player.
-        """
         if choice < 1 or choice > len(self.submission_order):
-            raise ValueError(f"Pick a number between 1 and {len(self.submission_order)}.")
+            raise ValueError(f"Pick 1–{len(self.submission_order)}.")
         winner_id = self.submission_order[choice - 1]
         winner = self.players[winner_id]
         winner.score += 1
-
-        # discard played cards and the black card
         for cards in self.submissions.values():
-            self.cards.discard_white(cards)
-        self.cards.discard_black(self.black_card)
-
+            self.deck.discard_white(cards)
+        self.deck.discard_black(self.black_card)
         return winner
 
     def advance_czar(self):
-        """Move to next czar."""
         self.czar_index = (self.czar_index + 1) % len(self.czar_order)
 
     def check_game_over(self) -> Optional[Player]:
-        """In FULL mode, check if anyone reached the win score."""
         if self.mode == GameMode.ADHOC:
             return None
         for p in self.players.values():
@@ -289,76 +282,595 @@ class Game:
         return None
 
 
-# ── Formatting helpers ───────────────────────────────────────────────────────
+# ── Formatting ───────────────────────────────────────────────────────────────
 
-def format_black_card(card: dict) -> str:
+def fmt_black(card: dict, answers: list[str] = None) -> str:
     text = card["text"]
-    pick = card["pick"]
-    formatted = text.replace("_", "▂▂▂▂▂▂")
-    label = f"  *(Pick {pick})*" if pick > 1 else ""
-    return f"## 🟫 {formatted}{label}"
+    if answers:
+        for ans in answers:
+            text = text.replace("_", f"**{ans}**", 1)
+        return text
+    else:
+        formatted = text.replace("_", BLANK)
+        if card["pick"] > 1:
+            formatted += f"\n\n*⎡ PICK {card['pick']} — play cards one at a time, in order ⎤*"
+        return formatted
 
-
-def format_hand(hand: list[str]) -> str:
-    lines = []
-    for i, card in enumerate(hand, 1):
-        lines.append(f"`{i:>2}.` {card}")
-    return "\n".join(lines)
-
-
-def format_submissions(entries: list[tuple[int, list[str]]]) -> str:
-    lines = []
-    for i, (_, cards) in enumerate(entries, 1):
-        combined = " **|** ".join(cards)
-        lines.append(f"**{i}.** {combined}")
-    return "\n".join(lines)
-
-
-def format_scoreboard(players: dict[int, Player]) -> str:
-    sorted_players = sorted(players.values(), key=lambda p: p.score, reverse=True)
-    lines = []
+def fmt_scores(players: dict[int, Player], compact: bool = False) -> str:
+    sorted_p = sorted(players.values(), key=lambda p: p.score, reverse=True)
     medals = ["🥇", "🥈", "🥉"]
-    for i, p in enumerate(sorted_players):
-        medal = medals[i] if i < len(medals) else "▪️"
-        lines.append(f"{medal} **{p.name}** — {p.score} point{'s' if p.score != 1 else ''}")
+    lines = []
+    for i, p in enumerate(sorted_p):
+        medal = medals[i] if i < len(medals) else "▫️"
+        pts = f"{p.score} pt{'s' if p.score != 1 else ''}"
+        lines.append(f"{medal} **{p.name}** — {pts}" if not compact else f"{medal} {p.name}: {pts}")
     return "\n".join(lines)
 
+def trunc(text: str, n: int = 95) -> str:
+    return text[:n] + "…" if len(text) > n else text
 
-# ── Discord Bot ──────────────────────────────────────────────────────────────
+def waiting_names(game: Game) -> list[str]:
+    return [game.players[pid].name for pid in game.players
+            if pid != game.czar_id and pid not in game.submissions
+            and pid not in [p for p in game.players if game.players[p].pending_picks]]
+
+def submitted_names(game: Game) -> list[str]:
+    return [game.players[pid].name for pid in game.submissions]
+
+def in_progress_names(game: Game) -> list[str]:
+    """Players who have started picking but not finalized."""
+    return [game.players[pid].name for pid in game.players
+            if pid != game.czar_id and pid not in game.submissions
+            and game.players[pid].pending_picks]
+
+
+# ── UI VIEWS ─────────────────────────────────────────────────────────────────
+
+# ──────────── Pack Selection ────────────
+
+class PackSelectView(ui.View):
+    def __init__(self, game: Game, db: CardDB):
+        super().__init__(timeout=120)
+        self.game = game
+        self.db = db
+        self.selected: list[str] = ["base"]
+
+        options = []
+        for pid in db.pack_ids:
+            info = db.pack_info(pid)
+            options.append(discord.SelectOption(
+                label=info["name"],
+                description=f"{info['white_count']}⬜ {info['black_count']}⬛ — {info['description'][:50]}",
+                value=pid,
+                default=(pid == "base")
+            ))
+
+        sel = ui.Select(placeholder="Choose card packs...", min_values=1,
+                        max_values=len(options), options=options, custom_id="pack_sel")
+        sel.callback = self.on_select
+        self.add_item(sel)
+
+    async def on_select(self, interaction: discord.Interaction):
+        self.selected = interaction.data["values"]
+        total_w = sum(self.db.pack_info(p)["white_count"] for p in self.selected)
+        total_b = sum(self.db.pack_info(p)["black_count"] for p in self.selected)
+        pack_names = ", ".join(self.db.pack_info(p)["name"] for p in self.selected)
+        await interaction.response.edit_message(
+            embed=discord.Embed(
+                title="📦 Pack Selection",
+                description=f"**Selected:** {pack_names}\n"
+                            f"**Total:** {total_w}⬜ {total_b}⬛\n\n"
+                            f"Click **Confirm** when ready.",
+                color=C.BLUE
+            ), view=self)
+
+    @ui.button(label="Confirm Packs", style=discord.ButtonStyle.green, emoji="✅", row=1)
+    async def confirm(self, interaction: discord.Interaction, button: ui.Button):
+        if interaction.user.id != self.game.host.id:
+            return await interaction.response.send_message("Only the host can confirm.", ephemeral=True)
+        if not self.selected:
+            self.selected = ["base"]
+
+        self.game.setup_deck(self.selected, self.db)
+        pack_names = ", ".join(self.db.pack_info(p)["name"] for p in self.selected)
+        self.stop()
+        for child in self.children:
+            child.disabled = True
+        await interaction.response.edit_message(
+            embed=discord.Embed(title="✅ Packs Locked In!", description=f"**Using:** {pack_names}", color=C.GREEN),
+            view=self)
+
+        random.shuffle(self.game.czar_order)
+        await interaction.followup.send(
+            embed=discord.Embed(title="🃏 Let's Go!", description="Shuffling the deck and dealing hands...", color=C.DARK))
+        await start_round(self.game)
+
+
+# ──────────── Lobby ────────────
+
+class LobbyView(ui.View):
+    def __init__(self, game: Game, db: CardDB):
+        super().__init__(timeout=600)
+        self.game = game
+        self.db = db
+
+    def _player_list(self) -> str:
+        return "\n".join(f"` {i}. ` {p.name}" for i, p in enumerate(self.game.players.values(), 1))
+
+    def _embed(self, footer: str) -> discord.Embed:
+        mode = f"First to **{self.game.win_score}** points" if self.game.mode == GameMode.FULL else "**Quick Round**"
+        embed = discord.Embed(
+            title="🃏 Cards Against Humanity",
+            description=f"**{self.game.host.display_name}** is hosting!\n\n"
+                        f"🏆 {mode}\n\n**Players:**\n{self._player_list()}",
+            color=C.BLACK)
+        embed.set_footer(text=footer)
+        return embed
+
+    @ui.button(label="Join Game", style=discord.ButtonStyle.green, emoji="🎮")
+    async def join_btn(self, interaction: discord.Interaction, button: ui.Button):
+        if self.game.phase != Phase.LOBBY:
+            return await interaction.response.send_message("Game already started!", ephemeral=True)
+        if self.game.add_player(interaction.user):
+            n = len(self.game.players)
+            status = "✅ Enough players — host can start!" if n >= MIN_PLAYERS else f"⏳ Need {MIN_PLAYERS - n} more"
+            await interaction.response.edit_message(embed=self._embed(status), view=self)
+        else:
+            await interaction.response.send_message("You're already in!", ephemeral=True)
+
+    @ui.button(label="Begin Game", style=discord.ButtonStyle.blurple, emoji="🚀")
+    async def begin_btn(self, interaction: discord.Interaction, button: ui.Button):
+        if interaction.user.id != self.game.host.id:
+            return await interaction.response.send_message("Only the host can start.", ephemeral=True)
+        if len(self.game.players) < MIN_PLAYERS:
+            return await interaction.response.send_message(
+                f"Need {MIN_PLAYERS} players. Currently: {len(self.game.players)}", ephemeral=True)
+
+        self.stop()
+        for child in self.children:
+            child.disabled = True
+        await interaction.response.edit_message(embed=self._embed("🎮 Game starting..."), view=self)
+
+        self.game.phase = Phase.PACKS
+        pack_view = PackSelectView(self.game, self.db)
+        desc = "\n".join(
+            f"**{self.db.pack_info(p)['name']}** — {self.db.pack_info(p)['white_count']}⬜ {self.db.pack_info(p)['black_count']}⬛"
+            for p in self.db.pack_ids)
+        await self.game.channel.send(
+            embed=discord.Embed(title="📦 Select Card Packs",
+                                description=f"Choose packs to play with:\n\n{desc}\n\n*Host: select and confirm below.*",
+                                color=C.BLUE),
+            view=pack_view)
+
+
+# ──────────── Ephemeral Hand Select (Pick 1) ────────────
+
+class EphemeralHandSelect(ui.View):
+    """Sent as an ephemeral followup. Player picks one card via dropdown."""
+    def __init__(self, game: Game, player: Player, pick_num: int, total_picks: int):
+        super().__init__(timeout=300)
+        self.game = game
+        self.player = player
+        self.pick_num = pick_num
+        self.total_picks = total_picks
+        self.done = False
+
+        ordinals = {1: "first", 2: "second", 3: "third"}
+        label = "Pick a card" if total_picks == 1 else f"Pick your {ordinals.get(pick_num, f'#{pick_num}')} card"
+
+        options = []
+        for i, card in enumerate(player.hand):
+            options.append(discord.SelectOption(label=trunc(card, 95), value=str(i), emoji="🃏"))
+
+        sel = ui.Select(placeholder=label, min_values=1, max_values=1, options=options[:25])
+        sel.callback = self.on_select
+        self.add_item(sel)
+
+    async def on_select(self, interaction: discord.Interaction):
+        if self.done:
+            return await interaction.response.send_message("Already submitted!", ephemeral=True)
+
+        idx = int(interaction.data["values"][0])
+        if idx >= len(self.player.hand):
+            return await interaction.response.send_message("Invalid card.", ephemeral=True)
+
+        card_text = self.player.hand[idx]
+        self.game.submit_card_by_value(self.player.id, card_text)
+
+        if self.pick_num >= self.total_picks:
+            # All picks complete
+            self.game.finalize_submission(self.player.id)
+            self.done = True
+            self.stop()
+
+            played = self.game.submissions[self.player.id]
+            played_str = "\n".join(f"` {i}. ` {c}" for i, c in enumerate(played, 1))
+
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title="✅ Cards Submitted!",
+                    description=f"You played:\n{played_str}",
+                    color=C.GREEN),
+                view=None)
+
+            # Update the channel round message
+            await update_round_status(self.game)
+
+            if self.game.all_submitted():
+                await begin_judging_phase(self.game)
+
+        else:
+            # Need another pick — send a new ephemeral followup
+            self.done = True
+            self.stop()
+
+            ordinals = {1: "first", 2: "second", 3: "third"}
+            next_num = self.pick_num + 1
+            next_label = ordinals.get(next_num, f"#{next_num}")
+
+            picked_so_far = ", ".join(f"**{c}**" for c in self.player.pending_picks)
+
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title=f"✅ Card {self.pick_num} locked in!",
+                    description=f"You picked: **{card_text}**\n\nNow pick your **{next_label}** card below.",
+                    color=C.ORANGE),
+                view=None)
+
+            # New view for next pick
+            next_view = EphemeralHandSelect(self.game, self.player, next_num, self.total_picks)
+            bc = fmt_black(self.game.black_card)
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title=f"🃏 Pick your {next_label} card",
+                    description=f"**Black Card:**\n>>> {bc}\n\n"
+                                f"**Already picked:** {picked_so_far}\n\n"
+                                f"**Your remaining cards:**\n" +
+                                "\n".join(f"` {i}. ` {c}" for i, c in enumerate(self.player.hand, 1)),
+                    color=C.PURPLE),
+                view=next_view,
+                ephemeral=True)
+
+
+# ──────────── Round Play Button (in channel) ────────────
+
+class RoundPlayView(ui.View):
+    """
+    Persistent view on the round embed.
+    Players click 'Play Card(s)' to get their hand ephemerally.
+    """
+    def __init__(self, game: Game):
+        super().__init__(timeout=None)  # persistent until round ends
+        self.game = game
+
+    @ui.button(label="Play Card(s)", style=discord.ButtonStyle.green, emoji="🃏")
+    async def play_btn(self, interaction: discord.Interaction, button: ui.Button):
+        game = self.game
+        uid = interaction.user.id
+
+        if uid not in game.players:
+            return await interaction.response.send_message(
+                "You're not in this game!", ephemeral=True)
+
+        if game.phase != Phase.PLAYING:
+            return await interaction.response.send_message(
+                "It's not time to play cards right now.", ephemeral=True)
+
+        if uid == game.czar_id:
+            return await interaction.response.send_message(
+                "🎩 You're the **Card Czar** this round!\nSit back and wait — you'll judge once everyone submits.",
+                ephemeral=True)
+
+        if uid in game.submissions:
+            played = game.submissions[uid]
+            played_str = "\n".join(f"` {i}. ` {c}" for i, c in enumerate(played, 1))
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="✅ Already Submitted",
+                    description=f"Your cards this round:\n{played_str}",
+                    color=C.GREEN),
+                ephemeral=True)
+
+        player = game.players[uid]
+
+        if player.pending_picks:
+            # They started but didn't finish a multi-pick — let them continue
+            ordinals = {1: "first", 2: "second", 3: "third"}
+            next_num = len(player.pending_picks) + 1
+            next_label = ordinals.get(next_num, f"#{next_num}")
+            picked_so_far = ", ".join(f"**{c}**" for c in player.pending_picks)
+
+            view = EphemeralHandSelect(game, player, next_num, game.black_card["pick"])
+            bc = fmt_black(game.black_card)
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title=f"🃏 Continue — pick your {next_label} card",
+                    description=f"**Black Card:**\n>>> {bc}\n\n"
+                                f"**Already picked:** {picked_so_far}\n\n"
+                                f"**Your remaining cards:**\n" +
+                                "\n".join(f"` {i}. ` {c}" for i, c in enumerate(player.hand, 1)),
+                    color=C.PURPLE),
+                view=view, ephemeral=True)
+
+        # Fresh pick
+        pick = game.black_card["pick"]
+        view = EphemeralHandSelect(game, player, 1, pick)
+        bc = fmt_black(game.black_card)
+
+        hand_display = "\n".join(f"` {i:>2}. ` {card}" for i, card in enumerate(player.hand, 1))
+
+        embed = discord.Embed(
+            title=f"🃏 Your Hand — Round {game.round_number}",
+            color=C.BLACK)
+        embed.add_field(name="⬛ Black Card", value=f">>> {bc}", inline=False)
+        embed.add_field(name="⬜ Your Cards", value=hand_display, inline=False)
+
+        if pick > 1:
+            embed.set_footer(text=f"This card requires {pick} answers — pick them one at a time, in order!")
+        else:
+            embed.set_footer(text="Select a card from the dropdown below.")
+
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+    @ui.button(label="View Hand", style=discord.ButtonStyle.gray, emoji="👁️")
+    async def view_btn(self, interaction: discord.Interaction, button: ui.Button):
+        """Just peek at your hand without playing."""
+        game = self.game
+        uid = interaction.user.id
+
+        if uid not in game.players:
+            return await interaction.response.send_message("You're not in this game!", ephemeral=True)
+
+        if uid == game.czar_id:
+            return await interaction.response.send_message(
+                "🎩 You're the **Card Czar** — no hand to view!", ephemeral=True)
+
+        player = game.players[uid]
+        hand_display = "\n".join(f"` {i:>2}. ` {card}" for i, card in enumerate(player.hand, 1))
+
+        embed = discord.Embed(title="👁️ Your Hand", description=hand_display, color=C.WHITE)
+        if uid in game.submissions:
+            played = game.submissions[uid]
+            embed.add_field(name="✅ You played", value="\n".join(f"` • ` {c}" for c in played), inline=False)
+        elif player.pending_picks:
+            embed.add_field(name="⏳ In progress", value="\n".join(f"` • ` {c}" for c in player.pending_picks), inline=False)
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+# ──────────── Judging (Ephemeral Czar Pick) ────────────
+
+class JudgingButtonView(ui.View):
+    """
+    In-channel view with a button. Only the czar can click it,
+    and they get an ephemeral dropdown to pick the winner.
+    """
+    def __init__(self, game: Game, entries: list[tuple[int, list[str]]]):
+        super().__init__(timeout=None)
+        self.game = game
+        self.entries = entries
+        self.done = False
+
+    @ui.button(label="Pick the Winner", style=discord.ButtonStyle.blurple, emoji="🎩")
+    async def pick_btn(self, interaction: discord.Interaction, button: ui.Button):
+        if self.done:
+            return await interaction.response.send_message("Winner already picked!", ephemeral=True)
+        if interaction.user.id != self.game.czar_id:
+            return await interaction.response.send_message(
+                "Only the **Card Czar** can pick the winner!", ephemeral=True)
+
+        # Send ephemeral dropdown
+        view = CzarPickDropdown(self.game, self.entries, self)
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="🎩 Pick the Winner",
+                description="Choose the funniest submission below.\nYour pick will be revealed to everyone!",
+                color=C.PURPLE),
+            view=view, ephemeral=True)
+
+    async def disable_all(self, message: discord.Message):
+        self.done = True
+        self.stop()
+        for child in self.children:
+            child.disabled = True
+        try:
+            await message.edit(view=self)
+        except discord.NotFound:
+            pass
+
+
+class CzarPickDropdown(ui.View):
+    """Ephemeral dropdown for the czar to choose the winner."""
+    def __init__(self, game: Game, entries: list[tuple[int, list[str]]],
+                 parent_view: JudgingButtonView):
+        super().__init__(timeout=300)
+        self.game = game
+        self.entries = entries
+        self.parent_view = parent_view
+        self.done = False
+
+        options = []
+        for i, (pid, cards) in enumerate(entries, 1):
+            combined = " | ".join(cards)
+            options.append(discord.SelectOption(
+                label=f"#{i}: {trunc(combined, 90)}",
+                value=str(i), emoji="⭐"))
+
+        sel = ui.Select(placeholder="Pick the funniest...", min_values=1, max_values=1, options=options[:25])
+        sel.callback = self.on_pick
+        self.add_item(sel)
+
+    async def on_pick(self, interaction: discord.Interaction):
+        if self.done:
+            return await interaction.response.send_message("Already picked!", ephemeral=True)
+
+        choice = int(interaction.data["values"][0])
+        winner = self.game.pick_winner(choice)
+        self.done = True
+        self.stop()
+
+        winning_cards = self.game.submissions[winner.id]
+        filled = fmt_black(self.game.black_card, winning_cards)
+
+        # Confirm to czar
+        await interaction.response.edit_message(
+            embed=discord.Embed(
+                title="✅ Winner Selected!",
+                description=f"You picked **{winner.name}**'s answer.\nRevealing to the channel...",
+                color=C.GREEN),
+            view=None)
+
+        # Disable the channel judging button
+        # (We need the message — find it via the parent view)
+        # Just announce; the view timeout will clean up
+
+        # Winner announcement in channel
+        embed = discord.Embed(title="🏆 Round Winner!", color=C.GOLD)
+        embed.add_field(
+            name=f"🎉 {winner.name} wins this round!",
+            value=f"\n>>> {filled}", inline=False)
+        embed.add_field(
+            name="Score",
+            value=f"**{winner.name}** now has **{winner.score}** point{'s' if winner.score != 1 else ''}",
+            inline=False)
+        embed.add_field(
+            name="Scoreboard",
+            value=fmt_scores(self.game.players, compact=True), inline=False)
+        await self.game.channel.send(embed=embed)
+
+        # Check game over
+        game_winner = self.game.check_game_over()
+        if game_winner:
+            self.game.phase = Phase.FINISHED
+            embed = discord.Embed(
+                title="🎊  GAME OVER  🎊",
+                description=f"# 🏆 {game_winner.name} wins!\n\n"
+                            f"with **{game_winner.score}** points\n\n"
+                            f"**Final Scores:**\n{fmt_scores(self.game.players)}",
+                color=C.GOLD)
+            await self.game.channel.send(embed=embed)
+            if self.game.channel.id in active_games:
+                del active_games[self.game.channel.id]
+            return
+
+        # Ad-hoc done
+        if self.game.mode == GameMode.ADHOC:
+            embed = discord.Embed(
+                title="✅ Quick Round Complete!",
+                description=f"Thanks for playing!\n\n{fmt_scores(self.game.players)}",
+                color=C.BLUE)
+            await self.game.channel.send(embed=embed)
+            self.game.phase = Phase.FINISHED
+            if self.game.channel.id in active_games:
+                del active_games[self.game.channel.id]
+            return
+
+        # Next round
+        self.game.advance_czar()
+        await asyncio.sleep(3)
+        await start_round(self.game)
+
+
+# ── Round Flow ───────────────────────────────────────────────────────────────
+
+async def start_round(game: Game):
+    black = game.start_round()
+    czar = game.czar
+
+    non_czar = [game.players[pid].name for pid in game.players if pid != game.czar_id]
+
+    embed = discord.Embed(title=f"━━━━ Round {game.round_number} ━━━━", color=C.BLACK)
+    embed.add_field(name="⬛ Black Card", value=f">>> {fmt_black(black)}", inline=False)
+    embed.add_field(name="🎩 Card Czar", value=f"{czar.member.mention}", inline=True)
+    embed.add_field(name="⏳ Waiting On", value=", ".join(non_czar), inline=True)
+
+    footer = f"First to {game.win_score} pts" if game.mode == GameMode.FULL else "Quick Round"
+    embed.set_footer(text=f"{footer} • Click below to view your hand and play!")
+
+    view = RoundPlayView(game)
+    game.round_view = view
+    msg = await game.channel.send(embed=embed, view=view)
+    game._round_msg = msg
+
+
+async def update_round_status(game: Game):
+    """Edit the round embed to show who has submitted."""
+    msg = getattr(game, "_round_msg", None)
+    if not msg:
+        return
+
+    black = game.black_card
+    czar = game.czar
+
+    done = submitted_names(game)
+    still_waiting = [game.players[pid].name for pid in game.players
+                     if pid != game.czar_id and pid not in game.submissions]
+    in_prog = in_progress_names(game)
+
+    embed = discord.Embed(title=f"━━━━ Round {game.round_number} ━━━━", color=C.BLACK)
+    embed.add_field(name="⬛ Black Card", value=f">>> {fmt_black(black)}", inline=False)
+    embed.add_field(name="🎩 Card Czar", value=f"{czar.member.mention}", inline=True)
+
+    status_parts = []
+    if done:
+        status_parts.append(f"✅ {', '.join(done)}")
+    if in_prog:
+        status_parts.append(f"✍️ {', '.join(in_prog)}")
+    if still_waiting:
+        status_parts.append(f"⏳ {', '.join(still_waiting)}")
+
+    embed.add_field(name="Status", value="\n".join(status_parts) or "Everyone submitted!", inline=True)
+
+    footer = f"First to {game.win_score} pts" if game.mode == GameMode.FULL else "Quick Round"
+    embed.set_footer(text=f"{footer} • Click below to view your hand and play!")
+
+    try:
+        await msg.edit(embed=embed)
+    except discord.NotFound:
+        pass
+
+
+async def begin_judging_phase(game: Game):
+    entries = game.begin_judging()
+
+    # Disable the round play buttons
+    if game.round_view:
+        game.round_view.stop()
+
+    embed = discord.Embed(
+        title="⚖️ All Cards Are In!",
+        description=f"**Black Card:**\n>>> {fmt_black(game.black_card)}",
+        color=C.PURPLE)
+
+    subs_text = ""
+    for i, (pid, cards) in enumerate(entries, 1):
+        combined = " **┃** ".join(cards)
+        subs_text += f"**` {i} `** {combined}\n"
+
+    embed.add_field(name="📋 Submissions", value=subs_text, inline=False)
+    embed.add_field(
+        name="🎩 Czar",
+        value=f"{game.czar.member.mention} — click the button to pick the winner!",
+        inline=False)
+
+    view = JudgingButtonView(game, entries)
+    await game.channel.send(embed=embed, view=view)
+
+
+# ── Bot Setup ────────────────────────────────────────────────────────────────
 
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents,
-                   help_command=None)
-
-# channel_id -> Game
+bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents, help_command=None)
 active_games: dict[int, Game] = {}
+cards_db = CardDB(CARDS_FILE)
 
-
-# ── Helper to send hand via DM ──
-
-async def send_hand(player: Player, black_card: Optional[dict] = None):
-    """DM the player their current hand."""
-    try:
-        embed = discord.Embed(title="🃏 Your Hand", color=0xffffff)
-        if black_card:
-            embed.description = f"**Black card:** {black_card['text'].replace('_', '▂▂▂')}\n*(Pick {black_card['pick']})*\n\n{format_hand(player.hand)}"
-        else:
-            embed.description = format_hand(player.hand)
-        embed.set_footer(text="Play cards in the game channel with: !cah play <number(s)>")
-        await player.member.send(embed=embed)
-    except discord.Forbidden:
-        pass  # can't DM this user
-
-
-# ── Events ───────────────────────────────────────────────────────────────────
 
 @bot.event
 async def on_ready():
-    print(f"✅ Logged in as {bot.user} (ID: {bot.user.id})")
-    print(f"   Loaded {cards_db.total_white} white cards, {cards_db.total_black} black cards")
+    print(f"✅  {bot.user} online | {cards_db.total_white}⬜ {cards_db.total_black}⬛ across {len(cards_db.pack_ids)} packs")
     await bot.change_presence(activity=discord.Game(name="Cards Against Humanity | !cah help"))
 
 
@@ -367,249 +879,66 @@ async def on_ready():
 @bot.command(name="help")
 async def cah_help(ctx: commands.Context):
     embed = discord.Embed(
-        title="🃏 Cards Against Humanity — Commands",
-        color=0x1a1a1a,
-        description="A horrible card game for horrible people."
-    )
-    embed.add_field(name="🎮 Starting Games", inline=False, value=(
-        "**`!cah start [score]`** — Start a full game (default: first to 7)\n"
-        "**`!cah quickround`** — Play a single ad-hoc round\n"
-        "**`!cah join`** — Join the current game lobby\n"
-        "**`!cah begin`** — Host begins the game after enough players join"
-    ))
+        title="🃏 Cards Against Humanity",
+        description="*A horrible card game for horrible people.*",
+        color=C.BLACK)
+    embed.add_field(name="🎮 Starting", inline=False, value=(
+        "`!cah start [score]` — Full game (default: first to 7)\n"
+        "`!cah quickround` — Single round\n"
+        "Then use the **Join** / **Begin** buttons!"))
     embed.add_field(name="🎴 Playing", inline=False, value=(
-        "**`!cah play <#> [#]`** — Play white card(s) by number from your hand\n"
-        "**`!cah hand`** — View your hand (sent via DM)\n"
-        "**`!cah pick <#>`** — *(Czar only)* Pick the winning submission"
-    ))
-    embed.add_field(name="📊 Info & Management", inline=False, value=(
-        "**`!cah status`** — Show current game status & scores\n"
-        "**`!cah skip`** — *(Host)* Skip the current czar's turn\n"
-        "**`!cah remove @player`** — *(Host)* Remove a player\n"
-        "**`!cah end`** — *(Host)* End the current game\n"
-        "**`!cah cards`** — Show card database stats"
-    ))
-    embed.set_footer(text="Minimum 3 players to start. Cards are dealt via DM — make sure DMs are open!")
+        "Click **Play Card(s)** on the round post — your hand appears privately.\n"
+        "Pick-2 cards are submitted one at a time in order.\n"
+        "Only you can see your hand and selection!"))
+    embed.add_field(name="🎩 Judging", inline=False, value=(
+        "The Card Czar clicks **Pick the Winner** — they see a private dropdown.\n"
+        "The winner is then revealed to the whole channel."))
+    embed.add_field(name="📊 Management", inline=False, value=(
+        "`!cah status` — Scores & round info\n"
+        "`!cah skip` — *(Host)* Skip AFK czar\n"
+        "`!cah remove @player` — *(Host)* Remove player\n"
+        "`!cah leave` — Leave the game\n"
+        "`!cah end` — *(Host)* End game\n"
+        "`!cah cards` — Card database stats"))
+    embed.set_footer(text=f"Min {MIN_PLAYERS} players • No DMs needed — everything is in-channel!")
     await ctx.send(embed=embed)
 
 
 @bot.command(name="cards")
 async def cah_cards(ctx: commands.Context):
-    embed = discord.Embed(title="📦 Card Database", color=0x333333)
-    embed.add_field(name="⬜ White Cards", value=str(cards_db.total_white))
-    embed.add_field(name="⬛ Black Cards", value=str(cards_db.total_black))
-    embed.add_field(name="File", value=f"`{CARDS_FILE.name}`", inline=False)
-    embed.set_footer(text="Edit cards.json to add your own cards!")
+    embed = discord.Embed(title="📦 Card Packs", color=C.BLUE)
+    for pid in cards_db.pack_ids:
+        info = cards_db.pack_info(pid)
+        embed.add_field(
+            name=info["name"],
+            value=f"{info['white_count']}⬜ • {info['black_count']}⬛\n*{info['description']}*",
+            inline=False)
+    embed.set_footer(text=f"Total: {cards_db.total_white}⬜ {cards_db.total_black}⬛ • Edit cards.json to add more!")
     await ctx.send(embed=embed)
 
 
 @bot.command(name="start")
 async def cah_start(ctx: commands.Context, score: int = DEFAULT_WIN_SCORE):
-    """Start a full game to a target score."""
     if ctx.channel.id in active_games:
-        return await ctx.send("⚠️ A game is already running in this channel. Use `!cah end` first.")
-
+        return await ctx.send("⚠️ A game is already running here. Use `!cah end` first.")
     if score < 1 or score > 50:
         return await ctx.send("⚠️ Score must be between 1 and 50.")
-
-    game = Game(ctx.channel, ctx.author, GameMode.FULL, score, cards_db)
+    game = Game(ctx.channel, ctx.author, GameMode.FULL, score)
     game.add_player(ctx.author)
     active_games[ctx.channel.id] = game
-
-    embed = discord.Embed(
-        title="🃏 Cards Against Humanity",
-        description=f"**{ctx.author.display_name}** is starting a game!\n\n"
-                    f"🏆 **First to {score} points wins.**\n\n"
-                    f"Type **`!cah join`** to join!\n"
-                    f"The host will type **`!cah begin`** when everyone is in.",
-        color=0x1a1a1a
-    )
-    embed.add_field(name="Players", value=f"1. {ctx.author.display_name}")
-    embed.set_footer(text=f"Minimum {MIN_PLAYERS} players needed")
-    await ctx.send(embed=embed)
+    view = LobbyView(game, cards_db)
+    await ctx.send(embed=view._embed(f"⏳ Need {MIN_PLAYERS - 1} more player(s)"), view=view)
 
 
 @bot.command(name="quickround")
 async def cah_quickround(ctx: commands.Context):
-    """Start a single ad-hoc round."""
     if ctx.channel.id in active_games:
-        return await ctx.send("⚠️ A game is already running in this channel. Use `!cah end` first.")
-
-    game = Game(ctx.channel, ctx.author, GameMode.ADHOC, 1, cards_db)
+        return await ctx.send("⚠️ A game is already running here. Use `!cah end` first.")
+    game = Game(ctx.channel, ctx.author, GameMode.ADHOC, 1)
     game.add_player(ctx.author)
     active_games[ctx.channel.id] = game
-
-    embed = discord.Embed(
-        title="🃏 Quick Round — Cards Against Humanity",
-        description=f"**{ctx.author.display_name}** is starting a quick round!\n\n"
-                    f"Type **`!cah join`** to play!\n"
-                    f"The host will type **`!cah begin`** when everyone is in.",
-        color=0x444444
-    )
-    embed.add_field(name="Players", value=f"1. {ctx.author.display_name}")
-    embed.set_footer(text=f"Minimum {MIN_PLAYERS} players needed")
-    await ctx.send(embed=embed)
-
-
-@bot.command(name="join")
-async def cah_join(ctx: commands.Context):
-    game = active_games.get(ctx.channel.id)
-    if not game:
-        return await ctx.send("No game in this channel. Start one with `!cah start` or `!cah quickround`.")
-
-    if game.phase != Phase.LOBBY:
-        return await ctx.send("⚠️ The game has already started. Wait for the next game!")
-
-    if game.add_player(ctx.author):
-        player_list = "\n".join(f"{i}. {p.name}" for i, p in enumerate(game.players.values(), 1))
-        embed = discord.Embed(
-            title="✅ Player Joined!",
-            description=f"**{ctx.author.display_name}** is in!\n\n**Players ({len(game.players)}):**\n{player_list}",
-            color=0x2ecc71
-        )
-        if len(game.players) >= MIN_PLAYERS:
-            embed.set_footer(text="Enough players! Host can type !cah begin to start.")
-        else:
-            embed.set_footer(text=f"Need {MIN_PLAYERS - len(game.players)} more player(s)")
-        await ctx.send(embed=embed)
-    else:
-        await ctx.send("You're already in the game!")
-
-
-@bot.command(name="begin")
-async def cah_begin(ctx: commands.Context):
-    game = active_games.get(ctx.channel.id)
-    if not game:
-        return await ctx.send("No game in this channel.")
-    if ctx.author.id != game.host.id:
-        return await ctx.send("Only the host can start the game.")
-    if game.phase != Phase.LOBBY:
-        return await ctx.send("The game has already started.")
-    if len(game.players) < MIN_PLAYERS:
-        return await ctx.send(f"⚠️ Need at least **{MIN_PLAYERS}** players. Currently: {len(game.players)}")
-
-    # Randomise czar order
-    random.shuffle(game.czar_order)
-    await ctx.send("**Let's go!** 🎉 Shuffling cards and dealing hands...")
-    await start_round(game)
-
-
-@bot.command(name="hand")
-async def cah_hand(ctx: commands.Context):
-    game = active_games.get(ctx.channel.id)
-    if not game or ctx.author.id not in game.players:
-        return await ctx.send("You're not in an active game here.")
-    player = game.players[ctx.author.id]
-    await send_hand(player, game.black_card)
-    await ctx.message.add_reaction("📬")
-
-
-@bot.command(name="play")
-async def cah_play(ctx: commands.Context, *card_nums: int):
-    game = active_games.get(ctx.channel.id)
-    if not game:
-        return await ctx.send("No active game in this channel.")
-    if ctx.author.id not in game.players:
-        return await ctx.send("You're not in this game.")
-    if game.phase != Phase.PLAYING:
-        return await ctx.send("It's not time to play cards right now.")
-    if ctx.author.id == game.czar_id:
-        return await ctx.send("You're the **Card Czar** this round — you don't play cards, you judge!")
-    if ctx.author.id in game.submissions:
-        return await ctx.send("You've already submitted this round!")
-
-    if not card_nums:
-        pick = game.black_card["pick"]
-        return await ctx.send(f"Usage: `!cah play <card#>` — pick **{pick}** card(s) from your hand.")
-
-    try:
-        played = game.submit_cards(ctx.author.id, list(card_nums))
-    except ValueError as e:
-        return await ctx.send(f"⚠️ {e}")
-
-    # Confirm via reaction
-    await ctx.message.add_reaction("✅")
-
-    # Delete the message to keep cards hidden (best-effort)
-    try:
-        await ctx.message.delete(delay=1)
-    except (discord.Forbidden, discord.NotFound):
-        pass
-
-    # notify the player privately
-    try:
-        await ctx.author.send(f"✅ You played: **{'** | **'.join(played)}**")
-    except discord.Forbidden:
-        pass
-
-    # check if all players submitted
-    if game.all_submitted():
-        await begin_judging_phase(game)
-    else:
-        waiting_on = [game.players[pid].name for pid in game.players
-                      if pid != game.czar_id and pid not in game.submissions]
-        await game.channel.send(f"📥 A card has been submitted! Waiting on: {', '.join(waiting_on)}")
-
-
-@bot.command(name="pick")
-async def cah_pick(ctx: commands.Context, choice: int = 0):
-    game = active_games.get(ctx.channel.id)
-    if not game:
-        return await ctx.send("No active game in this channel.")
-    if game.phase != Phase.JUDGING:
-        return await ctx.send("It's not judging time right now.")
-    if ctx.author.id != game.czar_id:
-        return await ctx.send("Only the **Card Czar** can pick the winner!")
-
-    if choice == 0:
-        return await ctx.send("Usage: `!cah pick <number>` — pick the winning submission.")
-
-    try:
-        winner = game.pick_winner(choice)
-    except ValueError as e:
-        return await ctx.send(f"⚠️ {e}")
-
-    # announce winner
-    winning_cards = game.submissions[winner.id]
-    embed = discord.Embed(
-        title="🏆 Winner!",
-        description=f"**{winner.name}** wins this round!\n\n"
-                    f"**Winning card(s):** {' | '.join(winning_cards)}\n\n"
-                    f"**{winner.name}** now has **{winner.score}** point(s).",
-        color=0xf1c40f
-    )
-    await ctx.send(embed=embed)
-
-    # check game over
-    game_winner = game.check_game_over()
-    if game_winner:
-        game.phase = Phase.FINISHED
-        embed = discord.Embed(
-            title="🎉🎉🎉 GAME OVER 🎉🎉🎉",
-            description=f"**{game_winner.name}** wins the game with **{game_winner.score}** points!\n\n"
-                        f"**Final Scores:**\n{format_scoreboard(game.players)}",
-            color=0xe74c3c
-        )
-        await ctx.send(embed=embed)
-        del active_games[ctx.channel.id]
-        return
-
-    # ad-hoc mode: one round only
-    if game.mode == GameMode.ADHOC:
-        embed = discord.Embed(
-            title="Quick Round Complete!",
-            description=f"Thanks for playing!\n\n**Scores:**\n{format_scoreboard(game.players)}",
-            color=0x3498db
-        )
-        await ctx.send(embed=embed)
-        game.phase = Phase.FINISHED
-        del active_games[ctx.channel.id]
-        return
-
-    # next round
-    game.advance_czar()
-    await asyncio.sleep(3)
-    await start_round(game)
+    view = LobbyView(game, cards_db)
+    await ctx.send(embed=view._embed(f"⏳ Need {MIN_PLAYERS - 1} more player(s)"), view=view)
 
 
 @bot.command(name="status")
@@ -617,129 +946,106 @@ async def cah_status(ctx: commands.Context):
     game = active_games.get(ctx.channel.id)
     if not game:
         return await ctx.send("No active game in this channel.")
-
     mode_str = f"Full game — first to {game.win_score}" if game.mode == GameMode.FULL else "Quick Round"
-
-    embed = discord.Embed(title="📊 Game Status", color=0x3498db)
+    embed = discord.Embed(title="📊 Game Status", color=C.BLUE)
     embed.add_field(name="Mode", value=mode_str, inline=True)
-    embed.add_field(name="Round", value=str(game.round_number), inline=True)
+    embed.add_field(name="Round", value=str(game.round_number) or "—", inline=True)
     embed.add_field(name="Phase", value=game.phase.name.title(), inline=True)
-
     if game.czar:
-        embed.add_field(name="Card Czar", value=game.czar.name, inline=True)
-
+        embed.add_field(name="🎩 Czar", value=game.czar.name, inline=True)
     embed.add_field(name="Players", value=str(len(game.players)), inline=True)
-    embed.add_field(name="\u200b", value="\u200b", inline=True)  # spacer
-
     if game.black_card and game.phase in (Phase.PLAYING, Phase.JUDGING):
-        embed.add_field(name="Black Card", value=game.black_card["text"], inline=False)
-
+        embed.add_field(name="⬛ Black Card", value=game.black_card["text"], inline=False)
     if game.phase == Phase.PLAYING:
+        done = submitted_names(game)
         waiting = [game.players[pid].name for pid in game.players
                    if pid != game.czar_id and pid not in game.submissions]
-        submitted = [game.players[pid].name for pid in game.submissions]
-        embed.add_field(name="✅ Submitted", value=", ".join(submitted) or "None yet", inline=False)
-        embed.add_field(name="⏳ Waiting on", value=", ".join(waiting) or "Nobody!", inline=False)
-
-    embed.add_field(name="Scoreboard", value=format_scoreboard(game.players), inline=False)
+        embed.add_field(name="✅ Submitted", value=", ".join(done) or "None", inline=True)
+        embed.add_field(name="⏳ Waiting", value=", ".join(waiting) or "Nobody!", inline=True)
+    embed.add_field(name="Scoreboard", value=fmt_scores(game.players), inline=False)
     await ctx.send(embed=embed)
+
+
+@bot.command(name="skip")
+async def cah_skip(ctx: commands.Context):
+    game = active_games.get(ctx.channel.id)
+    if not game:
+        return await ctx.send("No active game.")
+    if ctx.author.id != game.host.id:
+        return await ctx.send("Only the host can skip.")
+    if game.phase not in (Phase.PLAYING, Phase.JUDGING):
+        return await ctx.send("Nothing to skip.")
+    old_czar = game.czar.name if game.czar else "Unknown"
+    for pid, cards in game.submissions.items():
+        if pid in game.players:
+            game.players[pid].hand.extend(cards)
+    game.submissions.clear()
+    for pid in game.players:
+        game.cancel_pending(pid)
+    if game.black_card:
+        game.deck.discard_black(game.black_card)
+    if game.round_view:
+        game.round_view.stop()
+    game.advance_czar()
+    await ctx.send(f"⏭️ Skipped **{old_czar}**. New round starting...")
+    await start_round(game)
 
 
 @bot.command(name="remove")
 async def cah_remove(ctx: commands.Context, member: discord.Member = None):
     game = active_games.get(ctx.channel.id)
     if not game:
-        return await ctx.send("No active game in this channel.")
+        return await ctx.send("No active game.")
     if ctx.author.id != game.host.id:
         return await ctx.send("Only the host can remove players.")
-    if not member:
+    if not member or member.id not in game.players:
         return await ctx.send("Usage: `!cah remove @player`")
-    if member.id not in game.players:
-        return await ctx.send("That player isn't in the game.")
-
     was_czar = (member.id == game.czar_id)
     removed = game.remove_player(member.id)
-    await ctx.send(f"🚪 **{removed.name}** has been removed from the game.")
-
-    # if we're below minimum players, end
+    await ctx.send(f"🚪 **{removed.name}** removed from the game.")
     if len(game.players) < MIN_PLAYERS:
-        await ctx.send("⚠️ Not enough players remaining. Game over!")
+        await ctx.send("⚠️ Not enough players. Game over!")
         game.phase = Phase.FINISHED
         del active_games[ctx.channel.id]
         return
-
-    # if the czar was removed mid-round, restart the round
     if was_czar and game.phase in (Phase.PLAYING, Phase.JUDGING):
-        await ctx.send("The Card Czar was removed. Starting a new round...")
-        # return played cards to hands
+        await ctx.send("Czar was removed — restarting round...")
         for pid, cards in game.submissions.items():
             if pid in game.players:
                 game.players[pid].hand.extend(cards)
         game.submissions.clear()
         if game.black_card:
-            game.cards.discard_black(game.black_card)
+            game.deck.discard_black(game.black_card)
+        if game.round_view:
+            game.round_view.stop()
         await start_round(game)
-
-    # if everyone submitted after a removal, trigger judging
     elif game.phase == Phase.PLAYING and game.all_submitted():
         await begin_judging_phase(game)
-
-
-@bot.command(name="skip")
-async def cah_skip(ctx: commands.Context):
-    """Host can skip the current czar if they're AFK."""
-    game = active_games.get(ctx.channel.id)
-    if not game:
-        return await ctx.send("No active game in this channel.")
-    if ctx.author.id != game.host.id:
-        return await ctx.send("Only the host can skip the czar.")
-    if game.phase not in (Phase.PLAYING, Phase.JUDGING):
-        return await ctx.send("Nothing to skip right now.")
-
-    old_czar_name = game.czar.name if game.czar else "Unknown"
-
-    # return played cards to players
-    for pid, cards in game.submissions.items():
-        if pid in game.players:
-            game.players[pid].hand.extend(cards)
-    game.submissions.clear()
-
-    # discard the black card
-    if game.black_card:
-        game.cards.discard_black(game.black_card)
-
-    game.advance_czar()
-    await ctx.send(f"⏭️ Skipped **{old_czar_name}**'s turn as Card Czar. New round starting...")
-    await start_round(game)
 
 
 @bot.command(name="leave")
 async def cah_leave(ctx: commands.Context):
     game = active_games.get(ctx.channel.id)
-    if not game:
-        return await ctx.send("No active game in this channel.")
-    if ctx.author.id not in game.players:
-        return await ctx.send("You're not in this game.")
-
+    if not game or ctx.author.id not in game.players:
+        return await ctx.send("You're not in a game here.")
     was_czar = (ctx.author.id == game.czar_id)
     game.remove_player(ctx.author.id)
-    await ctx.send(f"👋 **{ctx.author.display_name}** has left the game.")
-
+    await ctx.send(f"👋 **{ctx.author.display_name}** left the game.")
     if len(game.players) < MIN_PLAYERS:
-        await ctx.send("⚠️ Not enough players remaining. Game over!")
+        await ctx.send("⚠️ Not enough players. Game over!")
         game.phase = Phase.FINISHED
         del active_games[ctx.channel.id]
         return
-
-    # same czar-left logic as remove
     if was_czar and game.phase in (Phase.PLAYING, Phase.JUDGING):
-        await ctx.send("The Card Czar left. Starting a new round...")
+        await ctx.send("Czar left — restarting round...")
         for pid, cards in game.submissions.items():
             if pid in game.players:
                 game.players[pid].hand.extend(cards)
         game.submissions.clear()
         if game.black_card:
-            game.cards.discard_black(game.black_card)
+            game.deck.discard_black(game.black_card)
+        if game.round_view:
+            game.round_view.stop()
         await start_round(game)
     elif game.phase == Phase.PLAYING and game.all_submitted():
         await begin_judging_phase(game)
@@ -749,83 +1055,38 @@ async def cah_leave(ctx: commands.Context):
 async def cah_end(ctx: commands.Context):
     game = active_games.get(ctx.channel.id)
     if not game:
-        return await ctx.send("No active game in this channel.")
+        return await ctx.send("No active game.")
     if ctx.author.id != game.host.id:
         return await ctx.send("Only the host can end the game.")
-
+    if game.round_view:
+        game.round_view.stop()
     embed = discord.Embed(
         title="🛑 Game Ended",
         description=f"**{ctx.author.display_name}** ended the game.\n\n"
-                    f"**Final Scores:**\n{format_scoreboard(game.players)}",
-        color=0xe74c3c
-    )
+                    f"**Final Scores:**\n{fmt_scores(game.players)}",
+        color=C.RED)
     await ctx.send(embed=embed)
     game.phase = Phase.FINISHED
     del active_games[ctx.channel.id]
 
 
-# ── Round flow helpers ───────────────────────────────────────────────────────
-
-async def start_round(game: Game):
-    """Deal cards, show the black card, DM hands."""
-    black = game.start_round()
-    czar = game.czar
-
-    embed = discord.Embed(
-        title=f"Round {game.round_number}",
-        description=f"{format_black_card(black)}\n\n"
-                    f"🎩 **Card Czar:** {czar.name}\n\n"
-                    f"Check your DMs for your hand, then play with `!cah play <#>`",
-        color=0x1a1a1a
-    )
-    if game.mode == GameMode.FULL:
-        embed.set_footer(text=f"First to {game.win_score} points wins!")
-    await game.channel.send(embed=embed)
-
-    # DM all players their hands
-    for pid, player in game.players.items():
-        if pid != game.czar_id:
-            await send_hand(player, black)
-
-
-async def begin_judging_phase(game: Game):
-    """All cards in — show them and ask the czar to judge."""
-    entries = game.begin_judging()
-
-    embed = discord.Embed(
-        title="⚖️ All Cards Are In!",
-        description=f"**Black Card:** {game.black_card['text']}\n\n"
-                    f"{format_submissions(entries)}\n\n"
-                    f"🎩 **{game.czar.name}**, pick the winner with `!cah pick <#>`",
-        color=0x9b59b6
-    )
-    await game.channel.send(embed=embed)
-
-
-# ── Error handling ───────────────────────────────────────────────────────────
-
 @bot.event
 async def on_command_error(ctx: commands.Context, error):
     if isinstance(error, commands.CommandNotFound):
-        return  # ignore unknown commands
+        return
     if isinstance(error, commands.MemberNotFound):
-        return await ctx.send("⚠️ Couldn't find that member. Make sure to @mention them.")
+        return await ctx.send("⚠️ Couldn't find that member.")
     if isinstance(error, commands.BadArgument):
-        return await ctx.send("⚠️ Invalid argument. Check `!cah help` for usage.")
-    # raise other errors
+        return await ctx.send("⚠️ Invalid argument. See `!cah help`.")
     raise error
 
 
 # ── Run ──────────────────────────────────────────────────────────────────────
 
-cards_db = CardDB(CARDS_FILE)
-
 if __name__ == "__main__":
     if TOKEN == "YOUR_TOKEN_HERE":
         print("=" * 60)
-        print("ERROR: Set your bot token!")
-        print("  Option 1: export DISCORD_BOT_TOKEN='your-token-here'")
-        print("  Option 2: Edit TOKEN at the top of bot.py")
+        print("  Set your bot token:  export DISCORD_BOT_TOKEN='...'")
         print("=" * 60)
     else:
         bot.run(TOKEN)
