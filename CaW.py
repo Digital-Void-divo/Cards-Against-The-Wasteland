@@ -76,13 +76,18 @@ class CardDB:
             "black_count": len(p["black"]),
         }
 
-    def build_deck(self, pack_ids: list[str]) -> tuple[list[str], list[dict]]:
+    def build_deck(self, pack_ids: list[str]) -> tuple[list[str], list[dict], dict[str, str]]:
         whites, blacks = [], []
+        white_pack: dict[str, str] = {}   # card text -> pack name
         for pid in pack_ids:
             if pid in self.packs:
-                whites.extend(self.packs[pid]["white"])
-                blacks.extend(self.packs[pid]["black"])
-        return whites, blacks
+                pack_name = self.packs[pid]["name"]
+                for w in self.packs[pid]["white"]:
+                    whites.append(w)
+                    white_pack[w] = pack_name
+                for b in self.packs[pid]["black"]:
+                    blacks.append({**b, "pack": pack_name})
+        return whites, blacks, white_pack
 
     @property
     def total_white(self) -> int:
@@ -168,6 +173,7 @@ class Game:
         self.win_score = win_score
         self.deck: Optional[Deck] = None
         self.selected_packs: list[str] = []
+        self.white_pack: dict[str, str] = {}   # card text -> pack name
 
         self.phase = Phase.LOBBY
         self.players: dict[int, Player] = {}
@@ -181,23 +187,6 @@ class Game:
 
         # reference to the active round view so it persists
         self.round_view: Optional["RoundPlayView"] = None
-
-    @property
-    def pack_label(self) -> str:
-        """Combined pack names for card rendering."""
-        if not self.selected_packs:
-            return ""
-        names = []
-        for pid in self.selected_packs:
-            if pid in cards_db.packs:
-                # Strip emoji from pack name for cleaner card rendering
-                raw = cards_db.packs[pid]["name"]
-                cleaned = raw.strip()
-                # Remove leading emoji (if first char is non-ascii)
-                if cleaned and ord(cleaned[0]) > 127:
-                    cleaned = cleaned[1:].strip()
-                names.append(cleaned)
-        return " + ".join(names) if len(names) > 1 else (names[0] if names else "")
 
     def add_player(self, member: discord.Member) -> bool:
         if member.id in self.players:
@@ -236,8 +225,9 @@ class Game:
 
     def setup_deck(self, pack_ids: list[str], db: CardDB):
         self.selected_packs = pack_ids
-        whites, blacks = db.build_deck(pack_ids)
+        whites, blacks, white_pack = db.build_deck(pack_ids)
         self.deck = Deck(whites, blacks)
+        self.white_pack = white_pack
 
     def start_round(self) -> dict:
         self.round_number += 1
@@ -358,10 +348,11 @@ class PackSelectView(ui.View):
         super().__init__(timeout=120)
         self.game = game
         self.db = db
-        # Default: only "base" selected
-        self.selected: set[str] = {"base"}
+        # Default: only "base" selected (or first pack if no "base")
+        first = "base" if "base" in db.pack_ids else db.pack_ids[0]
+        self.selected: set[str] = {first}
 
-        for pid in list(db.pack_ids)[:25]:          # Discord max 25 buttons
+        for idx, pid in enumerate(list(db.pack_ids)[:20]):   # rows 0-3, max 5 per row
             info = db.pack_info(pid)
             is_on = pid in self.selected
             btn = ui.Button(
@@ -369,13 +360,11 @@ class PackSelectView(ui.View):
                 emoji="✅" if is_on else "⬜",
                 style=discord.ButtonStyle.success if is_on else discord.ButtonStyle.secondary,
                 custom_id=f"pack_toggle_{pid}",
-                row=self._btn_row(list(db.pack_ids).index(pid)),
+                row=self._btn_row(idx),
             )
-            # Capture pid in closure
             btn.callback = self._make_toggle(pid)
             self.add_item(btn)
 
-        # Confirm button always on the last row (row 4)
         confirm = ui.Button(
             label="Confirm Packs",
             emoji="✅",
@@ -386,28 +375,22 @@ class PackSelectView(ui.View):
         confirm.callback = self._confirm
         self.add_item(confirm)
 
-    # ── Helpers ──────────────────────────────────────────────────────────
-
     @staticmethod
     def _btn_label(info: dict) -> str:
-        """'🎴 Base Set  •  250⬜ 90⬛  •  The original…'"""
         desc = info["description"][:28] + "…" if len(info["description"]) > 28 else info["description"]
         return f"{info['name']}  •  {info['white_count']}⬜{info['black_count']}⬛  •  {desc}"[:80]
 
     @staticmethod
     def _btn_row(index: int) -> int:
-        """Pack buttons fill rows 0-3 (max 5 per row); confirm is on row 4."""
         return min(index // 5, 3)
 
     def _make_toggle(self, pid: str):
-        """Return a callback that toggles this pack on/off."""
         async def toggle(interaction: discord.Interaction):
             if interaction.user.id != self.game.host.id:
                 return await interaction.response.send_message(
                     "Only the host can choose packs.", ephemeral=True)
 
             if pid in self.selected:
-                # Prevent deselecting the last pack
                 if len(self.selected) == 1:
                     return await interaction.response.send_message(
                         "You must keep at least one pack selected!", ephemeral=True)
@@ -415,7 +398,6 @@ class PackSelectView(ui.View):
             else:
                 self.selected.add(pid)
 
-            # Refresh button appearance
             for child in self.children:
                 if getattr(child, "custom_id", None) == f"pack_toggle_{pid}":
                     is_on = pid in self.selected
@@ -449,16 +431,14 @@ class PackSelectView(ui.View):
                 color=C.GREEN),
             view=self)
 
-        random.shuffle(self.game.czar_order)
+        # Show lobby
+        self.game.phase = Phase.LOBBY
+        lobby_view = LobbyView(self.game, self.db)
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="🃏 Let's Go!",
-                description="Shuffling the deck and dealing hands...",
-                color=C.DARK))
-        await start_round(self.game)
+            embed=lobby_view._embed(f"⏳ Need {MIN_PLAYERS - 1} more player(s)"),
+            view=lobby_view)
 
     def _build_embed(self) -> discord.Embed:
-        """Summary embed showing current selection totals."""
         total_w = sum(self.db.pack_info(p)["white_count"] for p in self.selected)
         total_b = sum(self.db.pack_info(p)["black_count"] for p in self.selected)
         pack_names = ", ".join(self.db.pack_info(p)["name"] for p in self.selected)
@@ -495,10 +475,18 @@ class LobbyView(ui.View):
 
     def _embed(self, footer: str) -> discord.Embed:
         mode = f"First to **{self.game.win_score}** points" if self.game.mode == GameMode.FULL else "**Quick Round**"
+
+        pack_line = ""
+        if self.game.selected_packs:
+            pack_names = ", ".join(self.db.pack_info(p)["name"] for p in self.game.selected_packs)
+            total_w = sum(self.db.pack_info(p)["white_count"] for p in self.game.selected_packs)
+            total_b = sum(self.db.pack_info(p)["black_count"] for p in self.game.selected_packs)
+            pack_line = f"\n📦 **Packs:** {pack_names} ({total_w}⬜ {total_b}⬛)"
+
         embed = discord.Embed(
             title="🃏 Cards Against Humanity",
             description=f"**{self.game.host.display_name}** is hosting!\n\n"
-                        f"🏆 {mode}\n\n**Players:**\n{self._player_list()}",
+                        f"🏆 {mode}{pack_line}\n\n**Players:**\n{self._player_list()}",
             color=C.BLACK)
         embed.set_footer(text=footer)
         return embed
@@ -527,16 +515,10 @@ class LobbyView(ui.View):
             child.disabled = True
         await interaction.response.edit_message(embed=self._embed("🎮 Game starting..."), view=self)
 
-        self.game.phase = Phase.PACKS
-        pack_view = PackSelectView(self.game, self.db)
-        desc = "\n".join(
-            f"**{self.db.pack_info(p)['name']}** — {self.db.pack_info(p)['white_count']}⬜ {self.db.pack_info(p)['black_count']}⬛"
-            for p in self.db.pack_ids)
-        await self.game.channel.send(
-            embed=discord.Embed(title="📦 Select Card Packs",
-                                description=f"Choose packs to play with:\n\n{desc}\n\n*Host: select and confirm below.*",
-                                color=C.BLUE),
-            view=pack_view)
+        random.shuffle(self.game.czar_order)
+        await interaction.followup.send(
+            embed=discord.Embed(title="🃏 Let's Go!", description="Shuffling the deck and dealing hands...", color=C.DARK))
+        await start_round(self.game)
 
 
 # ──────────── Ephemeral Hand Select (Pick 1) ────────────
@@ -574,7 +556,6 @@ class EphemeralHandSelect(ui.View):
         self.game.submit_card_by_value(self.player.id, card_text)
 
         if self.pick_num >= self.total_picks:
-            # All picks complete
             self.game.finalize_submission(self.player.id)
             self.done = True
             self.stop()
@@ -589,14 +570,12 @@ class EphemeralHandSelect(ui.View):
                     color=C.GREEN),
                 view=None)
 
-            # Update the channel round message
             await update_round_status(self.game)
 
             if self.game.all_submitted():
                 await begin_judging_phase(self.game)
 
         else:
-            # Need another pick — send a new ephemeral followup
             self.done = True
             self.stop()
 
@@ -613,7 +592,6 @@ class EphemeralHandSelect(ui.View):
                     color=C.ORANGE),
                 view=None)
 
-            # New view for next pick
             next_view = EphemeralHandSelect(self.game, self.player, next_num, self.total_picks)
             bc = fmt_black(self.game.black_card)
             await interaction.followup.send(
@@ -636,7 +614,7 @@ class RoundPlayView(ui.View):
     Players click 'Play Card(s)' to get their hand ephemerally.
     """
     def __init__(self, game: Game):
-        super().__init__(timeout=None)  # persistent until round ends
+        super().__init__(timeout=None)
         self.game = game
 
     @ui.button(label="Play Card(s)", style=discord.ButtonStyle.green, emoji="🃏")
@@ -670,7 +648,6 @@ class RoundPlayView(ui.View):
         player = game.players[uid]
 
         if player.pending_picks:
-            # They started but didn't finish a multi-pick — let them continue
             ordinals = {1: "first", 2: "second", 3: "third"}
             next_num = len(player.pending_picks) + 1
             next_label = ordinals.get(next_num, f"#{next_num}")
@@ -688,7 +665,6 @@ class RoundPlayView(ui.View):
                     color=C.PURPLE),
                 view=view, ephemeral=True)
 
-        # Fresh pick
         pick = game.black_card["pick"]
         view = EphemeralHandSelect(game, player, 1, pick)
         bc = fmt_black(game.black_card)
@@ -710,7 +686,6 @@ class RoundPlayView(ui.View):
 
     @ui.button(label="View Hand", style=discord.ButtonStyle.gray, emoji="👁️")
     async def view_btn(self, interaction: discord.Interaction, button: ui.Button):
-        """Just peek at your hand without playing."""
         game = self.game
         uid = interaction.user.id
 
@@ -737,10 +712,6 @@ class RoundPlayView(ui.View):
 # ──────────── Judging (Ephemeral Czar Pick) ────────────
 
 class JudgingButtonView(ui.View):
-    """
-    In-channel view with a button. Only the czar can click it,
-    and they get an ephemeral dropdown to pick the winner.
-    """
     def __init__(self, game: Game, entries: list[tuple[int, list[str]]]):
         super().__init__(timeout=None)
         self.game = game
@@ -755,7 +726,6 @@ class JudgingButtonView(ui.View):
             return await interaction.response.send_message(
                 "Only the **Card Czar** can pick the winner!", ephemeral=True)
 
-        # Send ephemeral dropdown
         view = CzarPickDropdown(self.game, self.entries, self)
         await interaction.response.send_message(
             embed=discord.Embed(
@@ -776,7 +746,6 @@ class JudgingButtonView(ui.View):
 
 
 class CzarPickDropdown(ui.View):
-    """Ephemeral dropdown for the czar to choose the winner."""
     def __init__(self, game: Game, entries: list[tuple[int, list[str]]],
                  parent_view: JudgingButtonView):
         super().__init__(timeout=300)
@@ -808,12 +777,11 @@ class CzarPickDropdown(ui.View):
         winning_cards = self.game.submissions[winner.id]
         filled = fmt_black(self.game.black_card, winning_cards)
 
-        # Render winner card image (black card with gold answers)
-        winner_img = render_winner(self.game.black_card["text"], winning_cards,
-                                   pack_name=self.game.pack_label)
+        winner_img = render_winner(
+            self.game.black_card["text"], winning_cards,
+            pack_name=self.game.black_card.get("pack", ""))
         card_file = discord.File(winner_img, filename="winner.png")
 
-        # Confirm to czar
         await interaction.response.edit_message(
             embed=discord.Embed(
                 title="✅ Winner Selected!",
@@ -821,7 +789,6 @@ class CzarPickDropdown(ui.View):
                 color=C.GREEN),
             view=None)
 
-        # Winner announcement in channel
         embed = discord.Embed(title="🏆 Round Winner!", color=C.GOLD)
         embed.set_image(url="attachment://winner.png")
         embed.add_field(
@@ -836,7 +803,6 @@ class CzarPickDropdown(ui.View):
             value=fmt_scores(self.game.players, compact=True), inline=False)
         await self.game.channel.send(embed=embed, file=card_file)
 
-        # Check game over
         game_winner = self.game.check_game_over()
         if game_winner:
             self.game.phase = Phase.FINISHED
@@ -851,7 +817,6 @@ class CzarPickDropdown(ui.View):
                 del active_games[self.game.channel.id]
             return
 
-        # Ad-hoc done
         if self.game.mode == GameMode.ADHOC:
             embed = discord.Embed(
                 title="✅ Quick Round Complete!",
@@ -863,7 +828,6 @@ class CzarPickDropdown(ui.View):
                 del active_games[self.game.channel.id]
             return
 
-        # Next round
         self.game.advance_czar()
         await asyncio.sleep(3)
         await start_round(self.game)
@@ -877,8 +841,9 @@ async def start_round(game: Game):
 
     non_czar = [game.players[pid].name for pid in game.players if pid != game.czar_id]
 
-    # Render black card image
-    card_img = render_black_card(black["text"], black["pick"], pack_name=game.pack_label)
+    card_img = render_black_card(
+        black["text"], black["pick"],
+        pack_name=black.get("pack", ""))
     card_file = discord.File(card_img, filename="black_card.png")
 
     embed = discord.Embed(title=f"━━━━ Round {game.round_number} ━━━━", color=C.BLACK)
@@ -896,7 +861,6 @@ async def start_round(game: Game):
 
 
 async def update_round_status(game: Game):
-    """Edit the round embed to show who has submitted."""
     msg = getattr(game, "_round_msg", None)
     if not msg:
         return
@@ -935,23 +899,23 @@ async def update_round_status(game: Game):
 async def begin_judging_phase(game: Game):
     entries = game.begin_judging()
 
-    # Disable the round play buttons
     if game.round_view:
         game.round_view.stop()
 
-    # Render judging image (black card + all white submissions)
     submission_cards = [cards for _, cards in entries]
+
     judging_img = render_judging(
         game.black_card["text"], game.black_card["pick"],
-        submission_cards, numbers=True, pack_name=game.pack_label)
+        submission_cards,
+        numbers=True,
+        black_pack=game.black_card.get("pack", ""),
+        white_packs=[[game.white_pack.get(c, "") for c in cards]
+                     for cards in submission_cards])
     card_file = discord.File(judging_img, filename="judging.png")
 
-    embed = discord.Embed(
-        title="⚖️ All Cards Are In!",
-        color=C.PURPLE)
+    embed = discord.Embed(title="⚖️ All Cards Are In!", color=C.PURPLE)
     embed.set_image(url="attachment://judging.png")
 
-    # Also list them as text for accessibility / the dropdown
     subs_text = ""
     for i, (pid, cards) in enumerate(entries, 1):
         combined = " **┃** ".join(cards)
@@ -995,7 +959,7 @@ async def cah_help(ctx: commands.Context):
     embed.add_field(name="🎮 Starting", inline=False, value=(
         "`!cah start [score]` — Full game (default: first to 7)\n"
         "`!cah quickround` — Single round\n"
-        "Then use the **Join** / **Begin** buttons!"))
+        "Select packs, then use the **Join** / **Begin** buttons!"))
     embed.add_field(name="🎴 Playing", inline=False, value=(
         "Click **Play Card(s)** on the round post — your hand appears privately.\n"
         "Pick-2 cards are submitted one at a time in order.\n"
