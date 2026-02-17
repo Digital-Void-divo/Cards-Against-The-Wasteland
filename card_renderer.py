@@ -118,7 +118,7 @@ else:
 CARD_W = 900
 CARD_H = 1200
 CORNER_R = 48
-CARD_PAD = 72
+CARD_PAD = 124
 TEXT_AREA_W = CARD_W - (CARD_PAD * 2)
 
 BG_COLOR       = (30, 30, 30)
@@ -151,7 +151,7 @@ LOGO_TEXT = "Cards Against the Wasteland"
 HAND_CARD_W = 450
 HAND_CARD_H = 600          # taller to accommodate larger text
 HAND_CORNER_R = 16
-HAND_CARD_PAD = 22
+HAND_CARD_PAD = 64
 HAND_TEXT_AREA_W = HAND_CARD_W - (HAND_CARD_PAD * 2)
 
 HAND_CARD_FONT_SIZE       = 24   # was 22 — much more readable
