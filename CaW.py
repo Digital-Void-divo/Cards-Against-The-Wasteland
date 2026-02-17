@@ -1036,8 +1036,9 @@ async def cah_start(ctx: commands.Context, score: int = DEFAULT_WIN_SCORE):
     game = Game(ctx.channel, ctx.author, GameMode.FULL, score)
     game.add_player(ctx.author)
     active_games[ctx.channel.id] = game
-    view = LobbyView(game, cards_db)
-    await ctx.send(embed=view._embed(f"⏳ Need {MIN_PLAYERS - 1} more player(s)"), view=view)
+    game.phase = Phase.PACKS
+    pack_view = PackSelectView(game, cards_db)
+    await ctx.send(embed=pack_view._build_embed(), view=pack_view)
 
 
 @bot.command(name="quickround")
@@ -1047,8 +1048,9 @@ async def cah_quickround(ctx: commands.Context):
     game = Game(ctx.channel, ctx.author, GameMode.ADHOC, 1)
     game.add_player(ctx.author)
     active_games[ctx.channel.id] = game
-    view = LobbyView(game, cards_db)
-    await ctx.send(embed=view._embed(f"⏳ Need {MIN_PLAYERS - 1} more player(s)"), view=view)
+    game.phase = Phase.PACKS
+    pack_view = PackSelectView(game, cards_db)
+    await ctx.send(embed=pack_view._build_embed(), view=pack_view)
 
 
 @bot.command(name="status")
