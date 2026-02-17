@@ -346,64 +346,140 @@ def in_progress_names(game: Game) -> list[str]:
 
 # ── UI VIEWS ─────────────────────────────────────────────────────────────────
 
-# ──────────── Pack Selection ────────────
+# ──────────── Pack Selection (Checkbox-style Toggle Buttons) ────────────
 
 class PackSelectView(ui.View):
+    """
+    Checkbox-style pack picker.
+    Each pack gets its own toggle button — green = selected, grey = deselected.
+    Up to 25 packs supported (Discord button limit).
+    """
     def __init__(self, game: Game, db: CardDB):
         super().__init__(timeout=120)
         self.game = game
         self.db = db
-        self.selected: list[str] = ["base"]
+        # Default: only "base" selected
+        self.selected: set[str] = {"base"}
 
-        options = []
-        for pid in db.pack_ids:
+        for pid in list(db.pack_ids)[:25]:          # Discord max 25 buttons
             info = db.pack_info(pid)
-            options.append(discord.SelectOption(
-                label=info["name"],
-                description=f"{info['white_count']}⬜ {info['black_count']}⬛ — {info['description'][:50]}",
-                value=pid,
-                default=(pid == "base")
-            ))
+            is_on = pid in self.selected
+            btn = ui.Button(
+                label=self._btn_label(info),
+                emoji="✅" if is_on else "⬜",
+                style=discord.ButtonStyle.success if is_on else discord.ButtonStyle.secondary,
+                custom_id=f"pack_toggle_{pid}",
+                row=self._btn_row(list(db.pack_ids).index(pid)),
+            )
+            # Capture pid in closure
+            btn.callback = self._make_toggle(pid)
+            self.add_item(btn)
 
-        sel = ui.Select(placeholder="Choose card packs...", min_values=1,
-                        max_values=len(options), options=options, custom_id="pack_sel")
-        sel.callback = self.on_select
-        self.add_item(sel)
+        # Confirm button always on the last row (row 4)
+        confirm = ui.Button(
+            label="Confirm Packs",
+            emoji="✅",
+            style=discord.ButtonStyle.green,
+            custom_id="pack_confirm",
+            row=4,
+        )
+        confirm.callback = self._confirm
+        self.add_item(confirm)
 
-    async def on_select(self, interaction: discord.Interaction):
-        self.selected = interaction.data["values"]
-        total_w = sum(self.db.pack_info(p)["white_count"] for p in self.selected)
-        total_b = sum(self.db.pack_info(p)["black_count"] for p in self.selected)
-        pack_names = ", ".join(self.db.pack_info(p)["name"] for p in self.selected)
-        await interaction.response.edit_message(
-            embed=discord.Embed(
-                title="📦 Pack Selection",
-                description=f"**Selected:** {pack_names}\n"
-                            f"**Total:** {total_w}⬜ {total_b}⬛\n\n"
-                            f"Click **Confirm** when ready.",
-                color=C.BLUE
-            ), view=self)
+    # ── Helpers ──────────────────────────────────────────────────────────
 
-    @ui.button(label="Confirm Packs", style=discord.ButtonStyle.green, emoji="✅", row=1)
-    async def confirm(self, interaction: discord.Interaction, button: ui.Button):
+    @staticmethod
+    def _btn_label(info: dict) -> str:
+        """'🎴 Base Set  •  250⬜ 90⬛  •  The original…'"""
+        desc = info["description"][:28] + "…" if len(info["description"]) > 28 else info["description"]
+        return f"{info['name']}  •  {info['white_count']}⬜{info['black_count']}⬛  •  {desc}"[:80]
+
+    @staticmethod
+    def _btn_row(index: int) -> int:
+        """Pack buttons fill rows 0-3 (max 5 per row); confirm is on row 4."""
+        return min(index // 5, 3)
+
+    def _make_toggle(self, pid: str):
+        """Return a callback that toggles this pack on/off."""
+        async def toggle(interaction: discord.Interaction):
+            if interaction.user.id != self.game.host.id:
+                return await interaction.response.send_message(
+                    "Only the host can choose packs.", ephemeral=True)
+
+            if pid in self.selected:
+                # Prevent deselecting the last pack
+                if len(self.selected) == 1:
+                    return await interaction.response.send_message(
+                        "You must keep at least one pack selected!", ephemeral=True)
+                self.selected.discard(pid)
+            else:
+                self.selected.add(pid)
+
+            # Refresh button appearance
+            for child in self.children:
+                if getattr(child, "custom_id", None) == f"pack_toggle_{pid}":
+                    is_on = pid in self.selected
+                    child.emoji = "✅" if is_on else "⬜"
+                    child.style = (discord.ButtonStyle.success
+                                   if is_on else discord.ButtonStyle.secondary)
+                    break
+
+            await interaction.response.edit_message(
+                embed=self._build_embed(), view=self)
+
+        return toggle
+
+    async def _confirm(self, interaction: discord.Interaction):
         if interaction.user.id != self.game.host.id:
-            return await interaction.response.send_message("Only the host can confirm.", ephemeral=True)
-        if not self.selected:
-            self.selected = ["base"]
+            return await interaction.response.send_message(
+                "Only the host can confirm.", ephemeral=True)
 
-        self.game.setup_deck(self.selected, self.db)
-        pack_names = ", ".join(self.db.pack_info(p)["name"] for p in self.selected)
+        pack_list = list(self.selected)
+        self.game.setup_deck(pack_list, self.db)
+        pack_names = ", ".join(self.db.pack_info(p)["name"] for p in pack_list)
+
         self.stop()
         for child in self.children:
             child.disabled = True
+
         await interaction.response.edit_message(
-            embed=discord.Embed(title="✅ Packs Locked In!", description=f"**Using:** {pack_names}", color=C.GREEN),
+            embed=discord.Embed(
+                title="✅ Packs Locked In!",
+                description=f"**Using:** {pack_names}",
+                color=C.GREEN),
             view=self)
 
         random.shuffle(self.game.czar_order)
         await interaction.followup.send(
-            embed=discord.Embed(title="🃏 Let's Go!", description="Shuffling the deck and dealing hands...", color=C.DARK))
+            embed=discord.Embed(
+                title="🃏 Let's Go!",
+                description="Shuffling the deck and dealing hands...",
+                color=C.DARK))
         await start_round(self.game)
+
+    def _build_embed(self) -> discord.Embed:
+        """Summary embed showing current selection totals."""
+        total_w = sum(self.db.pack_info(p)["white_count"] for p in self.selected)
+        total_b = sum(self.db.pack_info(p)["black_count"] for p in self.selected)
+        pack_names = ", ".join(self.db.pack_info(p)["name"] for p in self.selected)
+
+        lines = []
+        for pid in self.db.pack_ids:
+            info = self.db.pack_info(pid)
+            tick = "✅" if pid in self.selected else "⬜"
+            lines.append(
+                f"{tick} **{info['name']}** — "
+                f"{info['white_count']}⬜ {info['black_count']}⬛ — "
+                f"*{info['description']}*"
+            )
+
+        return discord.Embed(
+            title="📦 Choose Your Card Packs",
+            description="\n".join(lines) +
+                        f"\n\n**Selected:** {pack_names}\n"
+                        f"**Total cards:** {total_w}⬜ {total_b}⬛\n\n"
+                        f"*Toggle packs above, then click **Confirm**.*",
+            color=C.BLUE)
 
 
 # ──────────── Lobby ────────────
