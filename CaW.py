@@ -1,5 +1,5 @@
 """
-Cards Against Humanity — Discord Bot  v3.0
+Cards Against the Wasteland — Discord Bot  v3.0
 ============================================
 Fully in-channel with ephemeral interactions. No DMs needed.
 
@@ -471,7 +471,7 @@ class LobbyView(ui.View):
             total_b    = sum(self.db.pack_info(p)["black_count"] for p in self.game.selected_packs)
             pack_line  = f"\n📦 **Packs:** {pack_names} ({total_w}⬜ {total_b}⬛)"
         embed = discord.Embed(
-            title="🃏 Cards Against Humanity",
+            title="🃏 Cards Against the Wasteland",
             description=f"**{self.game.host.display_name}** is hosting!\n\n"
                         f"🏆 {mode}{pack_line}\n\n**Players:**\n{self._player_list()}",
             color=C.BLACK)
@@ -868,14 +868,14 @@ cards_db     = CardDB(CARDS_FILE)
 @bot.event
 async def on_ready():
     print(f"✅  {bot.user} online | {cards_db.total_white}⬜ {cards_db.total_black}⬛ across {len(cards_db.pack_ids)} packs")
-    await bot.change_presence(activity=discord.Game(name="Cards Against Humanity | !cah help"))
+    await bot.change_presence(activity=discord.Game(name="Cards Against the Wasteland | !cah help"))
 
 
 # ── Commands ─────────────────────────────────────────────────────────────────
 
 @bot.command(name="help")
 async def cah_help(ctx: commands.Context):
-    embed = discord.Embed(title="🃏 Cards Against Humanity", description="*A horrible card game for horrible people.*", color=C.BLACK)
+    embed = discord.Embed(title="🃏 Cards Against the Wasteland", description="*A horrible card game for horrible people.*", color=C.BLACK)
     embed.add_field(name="🎮 Starting", inline=False, value=(
         "`!cah start [score]` — Full game (default: first to 7)\n"
         "`!cah quickround` — Single round\n"
