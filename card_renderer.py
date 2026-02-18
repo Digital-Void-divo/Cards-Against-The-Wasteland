@@ -89,8 +89,8 @@ else:
 
 # ── Design Constants — Full Size ─────────────────────────────────────────────
 
-CARD_W = 840
-CARD_H = 1170
+CARD_W = 900
+CARD_H = 1200
 CORNER_R = 48
 CARD_PAD = 72
 TEXT_AREA_W = CARD_W - (CARD_PAD * 2)
@@ -110,10 +110,10 @@ LOGO_WHITE     = (0, 0, 0, 100)
 CARD_GAP   = 54
 CANVAS_PAD = 84
 
-CARD_FONT_SIZE       = 66
-CARD_FONT_SIZE_SMALL = 54
-LOGO_FONT_SIZE       = 18
-PACK_FONT_SIZE       = 18
+CARD_FONT_SIZE       = 56
+CARD_FONT_SIZE_SMALL = 40
+LOGO_FONT_SIZE       = 16
+PACK_FONT_SIZE       = 16
 NUMBER_FONT_SIZE     = 48
 
 # Total footer height (text fallback): logo line + gap + pack line
@@ -125,20 +125,20 @@ LOGO_TEXT = "Cards Against the Wasteland"
 
 # ── Design Constants — Hand Size (~35%) ──────────────────────────────────────
 
-HAND_CARD_W = 300
-HAND_CARD_H = 500
+HAND_CARD_W = 450
+HAND_CARD_H = 900
 HAND_CORNER_R = 16
-HAND_CARD_PAD = 22
+HAND_CARD_PAD = 24
 HAND_TEXT_AREA_W = HAND_CARD_W - (HAND_CARD_PAD * 2)
 
-HAND_CARD_FONT_SIZE       = 38
-HAND_CARD_FONT_SIZE_SMALL = 30
-HAND_LOGO_FONT_SIZE       = 9
-HAND_PACK_FONT_SIZE       = 9
-HAND_NUMBER_FONT_SIZE     = 20
+HAND_CARD_FONT_SIZE       = 32
+HAND_CARD_FONT_SIZE_SMALL = 24
+HAND_LOGO_FONT_SIZE       = 8
+HAND_PACK_FONT_SIZE       = 8
+HAND_NUMBER_FONT_SIZE     = 24
 
-HAND_CARD_GAP   = 14
-HAND_CANVAS_PAD = 20
+HAND_CARD_GAP   = 16
+HAND_CANVAS_PAD = 16
 HAND_COLS       = 5
 
 HAND_FOOTER_H        = HAND_LOGO_FONT_SIZE + 5 + HAND_PACK_FONT_SIZE   # = 23px
