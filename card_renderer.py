@@ -1,5 +1,5 @@
 """
-card_renderer.py — Generates Cards Against the Wasteland card images.
+card_renderer.py — Generates Cards Against Humanity card images.
 
 Produces images for four game phases:
   1. Round start:  Black card only on a dark table
@@ -89,8 +89,8 @@ else:
 
 # ── Design Constants — Full Size ─────────────────────────────────────────────
 
-CARD_W = 900
-CARD_H = 1200
+CARD_W = 840
+CARD_H = 1170
 CORNER_R = 48
 CARD_PAD = 72
 TEXT_AREA_W = CARD_W - (CARD_PAD * 2)
@@ -110,11 +110,11 @@ LOGO_WHITE     = (0, 0, 0, 100)
 CARD_GAP   = 54
 CANVAS_PAD = 84
 
-CARD_FONT_SIZE       = 48
-CARD_FONT_SIZE_SMALL = 36
-LOGO_FONT_SIZE       = 16
-PACK_FONT_SIZE       = 16
-NUMBER_FONT_SIZE     = 32
+CARD_FONT_SIZE       = 66
+CARD_FONT_SIZE_SMALL = 54
+LOGO_FONT_SIZE       = 18
+PACK_FONT_SIZE       = 18
+NUMBER_FONT_SIZE     = 48
 
 # Total footer height (text fallback): logo line + gap + pack line
 FOOTER_H      = LOGO_FONT_SIZE + 8 + PACK_FONT_SIZE   # = 44px
@@ -125,20 +125,20 @@ LOGO_TEXT = "Cards Against the Wasteland"
 
 # ── Design Constants — Hand Size (~35%) ──────────────────────────────────────
 
-HAND_CARD_W = 450
-HAND_CARD_H = 600
+HAND_CARD_W = 300
+HAND_CARD_H = 500
 HAND_CORNER_R = 16
-HAND_CARD_PAD = 32
+HAND_CARD_PAD = 22
 HAND_TEXT_AREA_W = HAND_CARD_W - (HAND_CARD_PAD * 2)
 
-HAND_CARD_FONT_SIZE       = 24
-HAND_CARD_FONT_SIZE_SMALL = 18
-HAND_LOGO_FONT_SIZE       = 8
-HAND_PACK_FONT_SIZE       = 8
-HAND_NUMBER_FONT_SIZE     = 16
+HAND_CARD_FONT_SIZE       = 38
+HAND_CARD_FONT_SIZE_SMALL = 30
+HAND_LOGO_FONT_SIZE       = 9
+HAND_PACK_FONT_SIZE       = 9
+HAND_NUMBER_FONT_SIZE     = 20
 
-HAND_CARD_GAP   = 16
-HAND_CANVAS_PAD = 16
+HAND_CARD_GAP   = 14
+HAND_CANVAS_PAD = 20
 HAND_COLS       = 5
 
 HAND_FOOTER_H        = HAND_LOGO_FONT_SIZE + 5 + HAND_PACK_FONT_SIZE   # = 23px
@@ -423,26 +423,43 @@ def _draw_black_card_filled(img, x, y, card_text, answers,
     _rounded_rect(draw, (x, y, x + CARD_W, y + CARD_H), CORNER_R, fill=BLACK_CARD_BG)
 
     font = _get_card_font(card_text, bold=True)
-    full_text = card_text
-    for ans in answers:
-        full_text = full_text.replace("_", ans, 1)
+    
+    # If no blanks, append answers after the question
+    if "_" not in card_text:
+        full_text = card_text + " " + " ".join(answers)
+    else:
+        full_text = card_text
+        for ans in answers:
+            full_text = full_text.replace("_", ans, 1)
 
     lines = _wrap_text(full_text, font, TEXT_AREA_W)
     line_h = font.getbbox("Ag")[3] - font.getbbox("Ag")[1]
 
     # Build character color map
     color_map = []
-    temp, answer_texts = card_text, list(answers)
-    i = 0
-    while i < len(temp):
-        if temp[i] == "_" and answer_texts:
-            ans = answer_texts.pop(0)
+    if "_" not in card_text:
+        # No blanks - card text is white, appended answers are gold
+        for ch in card_text:
+            color_map.append((ch, False))
+        color_map.append((' ', False))  # space between question and answer
+        for ans in answers:
             for ch in ans:
                 color_map.append((ch, True))
-            i += 1
-        else:
-            color_map.append((temp[i], False))
-            i += 1
+            if ans != answers[-1]:  # space between multiple answers
+                color_map.append((' ', True))
+    else:
+        # Has blanks - replace underscores with answers
+        temp, answer_texts = card_text, list(answers)
+        i = 0
+        while i < len(temp):
+            if temp[i] == "_" and answer_texts:
+                ans = answer_texts.pop(0)
+                for ch in ans:
+                    color_map.append((ch, True))
+                i += 1
+            else:
+                color_map.append((temp[i], False))
+                i += 1
 
     char_idx = 0
     ty = y + CARD_PAD
@@ -478,7 +495,7 @@ def render_black_card(card_text: str, pick: int = 1,
     """Render just the black card (round start). Returns BytesIO PNG."""
     display_text = card_text.replace("_", "_____")
     if pick > 1:
-        display_text += f"\n\n\n(PICK {pick})"
+        display_text += f"\n\nPICK {pick}"
     img = Image.new("RGB", (CARD_W + CANVAS_PAD * 2, CARD_H + CANVAS_PAD * 2), BG_COLOR)
     _draw_card(img, CANVAS_PAD, CANVAS_PAD, is_black=True, text=display_text,
                bold=True, pack_id=pack_id, pack_name=pack_name)
