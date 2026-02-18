@@ -110,15 +110,19 @@ LOGO_WHITE_FG  = (0, 0, 0)         # black text on white cards
 CARD_GAP   = 54
 CANVAS_PAD = 96
 
-CARD_FONT_SIZE       = 56
-CARD_FONT_SIZE_SMALL = 40
+CARD_FONT_SIZE       = 48
+CARD_FONT_SIZE_SMALL = 34
 LOGO_FONT_SIZE       = 16
 PACK_FONT_SIZE       = 16
 NUMBER_FONT_SIZE     = 48
 
+# Footer padding (independent of CARD_PAD so the footer hugs the bottom-left)
+FOOTER_PAD_LEFT   = 48
+FOOTER_PAD_BOTTOM = 48
+
 # Total footer height (text fallback): logo line + gap + pack line
 FOOTER_H      = LOGO_FONT_SIZE + 8 + PACK_FONT_SIZE   # = 44px
-FOOTER_RESERVED = CARD_PAD + FOOTER_H
+FOOTER_RESERVED = FOOTER_PAD_BOTTOM + FOOTER_H
 
 LOGO_TEXT = "Cards Against the Wasteland"
 
@@ -141,8 +145,11 @@ HAND_CARD_GAP   = 16
 HAND_CANVAS_PAD = 16
 HAND_COLS       = 5
 
+HAND_FOOTER_PAD_LEFT   = 20
+HAND_FOOTER_PAD_BOTTOM = 20
+
 HAND_FOOTER_H        = HAND_LOGO_FONT_SIZE + 5 + HAND_PACK_FONT_SIZE   # = 23px
-HAND_FOOTER_RESERVED = HAND_CARD_PAD + HAND_FOOTER_H
+HAND_FOOTER_RESERVED = HAND_FOOTER_PAD_BOTTOM + HAND_FOOTER_H
 
 
 # ── Font Loading ─────────────────────────────────────────────────────────────
@@ -281,7 +288,7 @@ def _draw_shadow(img, x, y, w, h, corner_r=None, offset=4):
 
 
 def _draw_footer(img, draw, x, y,
-                 card_w, card_h, card_pad, text_area_w,
+                 card_w, card_h, footer_pad_left, footer_pad_bottom,
                  footer_h, logo_font_size, pack_font_size, gap,
                  is_black, pack_id, pack_name):
     """
@@ -292,16 +299,17 @@ def _draw_footer(img, draw, x, y,
     If no logo image, draw LOGO_TEXT on line 1 and pack_name on line 2.
     """
     logo_col = LOGO_BLACK_FG if is_black else LOGO_WHITE_FG
-    footer_y = y + card_h - card_pad - footer_h
+    footer_y = y + card_h - footer_pad_bottom - footer_h
+    max_footer_w = card_w - footer_pad_left * 2
 
     logo_w = 0
     if pack_id:
         logo_w = _paste_logo(
             img, pack_id,
-            x=x + card_pad,
+            x=x + footer_pad_left,
             y=footer_y,
             target_h=footer_h,
-            max_w=text_area_w // 2,
+            max_w=max_footer_w // 2,
             is_black=is_black)
         draw = ImageDraw.Draw(img)  # refresh after paste
 
@@ -309,21 +317,21 @@ def _draw_footer(img, draw, x, y,
 
     if logo_w > 0:
         # Logo was placed — draw LOGO_TEXT to the right of the logo
-        text_x = x + card_pad + logo_w + 8
+        text_x = x + footer_pad_left + logo_w + 8
         text_h = logo_font.getbbox(LOGO_TEXT)[3] - logo_font.getbbox(LOGO_TEXT)[1]
         text_y = footer_y + (footer_h - text_h) // 2
         draw.text((text_x, text_y), LOGO_TEXT, fill=logo_col, font=logo_font)
     else:
         # No logo — text fallback: two lines
-        draw.text((x + card_pad, footer_y), LOGO_TEXT, fill=logo_col, font=logo_font)
+        draw.text((x + footer_pad_left, footer_y), LOGO_TEXT, fill=logo_col, font=logo_font)
         if pack_name:
             pack_font = _load_font(FONT_REG_PATH, pack_font_size)
-            pack_y = y + card_h - card_pad - pack_font_size
+            pack_y = y + card_h - footer_pad_bottom - pack_font_size
             pack_line = pack_name
-            while (pack_font.getbbox(pack_line)[2] - pack_font.getbbox(pack_line)[0] > text_area_w
+            while (pack_font.getbbox(pack_line)[2] - pack_font.getbbox(pack_line)[0] > max_footer_w
                    and len(pack_line) > 5):
                 pack_line = pack_line[:-2] + "…"
-            draw.text((x + card_pad, pack_y), pack_line, fill=logo_col, font=pack_font)
+            draw.text((x + footer_pad_left, pack_y), pack_line, fill=logo_col, font=pack_font)
 
 
 def _draw_card(img, x, y, is_black, text,
@@ -350,7 +358,7 @@ def _draw_card(img, x, y, is_black, text,
         ty += line_h + 10
 
     _draw_footer(img, draw, x, y,
-                 CARD_W, CARD_H, CARD_PAD, TEXT_AREA_W,
+                 CARD_W, CARD_H, FOOTER_PAD_LEFT, FOOTER_PAD_BOTTOM,
                  FOOTER_H, LOGO_FONT_SIZE, PACK_FONT_SIZE, 8,
                  is_black, pack_id, pack_name)
     draw = ImageDraw.Draw(img)
@@ -401,7 +409,7 @@ def _draw_hand_card(img, x, y, text, number,
         ty += line_h + 4
 
     _draw_footer(img, draw, x, y,
-                 HAND_CARD_W, HAND_CARD_H, HAND_CARD_PAD, HAND_TEXT_AREA_W,
+                 HAND_CARD_W, HAND_CARD_H, HAND_FOOTER_PAD_LEFT, HAND_FOOTER_PAD_BOTTOM,
                  HAND_FOOTER_H, HAND_LOGO_FONT_SIZE, HAND_PACK_FONT_SIZE, 5,
                  is_black=False, pack_id=pack_id, pack_name=pack_name)
     draw = ImageDraw.Draw(img)
@@ -504,7 +512,7 @@ def _draw_black_card_filled(img, x, y, card_text, answers,
                 char_idx += 1
 
     _draw_footer(img, draw, x, y,
-                 CARD_W, CARD_H, CARD_PAD, TEXT_AREA_W,
+                 CARD_W, CARD_H, FOOTER_PAD_LEFT, FOOTER_PAD_BOTTOM,
                  FOOTER_H, LOGO_FONT_SIZE, PACK_FONT_SIZE, 8,
                  is_black=True, pack_id=pack_id, pack_name=pack_name)
 
