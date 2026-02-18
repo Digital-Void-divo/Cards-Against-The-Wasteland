@@ -8,9 +8,8 @@ Produces images for four game phases:
   4. Hand view:    Player's white cards in a 5x2 grid (scaled down)
 
 Pack logos:
-  Place a file named {pack_id}.png (e.g. base.png, geek.png) in the same
-  directory as this script. It will be used as the footer logo on cards from
-  that pack, scaled to fit the footer area automatically.
+  Place a file named {pack_id}_white.png and {pack_id}_black.png in the same
+  directory as this script. The white variant is used on black cards and vice versa.
   Recommended source resolution: 400px tall at whatever width your logo needs.
   If no image is found, the pack name falls back to plain text.
 """
@@ -104,8 +103,9 @@ FILLED_COLOR   = (255, 210, 60)
 SHADOW_COLOR   = (0, 0, 0, 80)
 NUMBER_BG      = (60, 60, 60)
 NUMBER_FG      = (255, 255, 255)
-LOGO_BLACK     = (255, 255, 255, 140)
-LOGO_WHITE     = (0, 0, 0, 100)
+# Footer text colors: full-opacity, contrasting with card background
+LOGO_BLACK_FG  = (255, 255, 255)   # white text on black cards
+LOGO_WHITE_FG  = (0, 0, 0)         # black text on white cards
 
 CARD_GAP   = 54
 CANVAS_PAD = 96
@@ -175,10 +175,12 @@ _logo_cache: dict[str, Image.Image | None] = {}
 
 def _load_pack_logo(pack_id: str, is_black: bool) -> Image.Image | None:
     """
-    Load {pack_id}_black.png or {pack_id}_white.png from the script directory.
+    Load the logo variant that contrasts with the card background:
+      - Black card → load {pack_id}_white.png  (white icon on black bg)
+      - White card → load {pack_id}_black.png  (black icon on white bg)
     Results are cached per variant. Returns RGBA image if found, None otherwise.
     """
-    variant = "black" if is_black else "white"
+    variant = "white" if is_black else "black"
     cache_key = f"{pack_id}_{variant}"
     if cache_key in _logo_cache:
         return _logo_cache[cache_key]
@@ -205,14 +207,14 @@ def _paste_logo(canvas: Image.Image, pack_id: str,
                 x: int, y: int, target_h: int, max_w: int,
                 is_black: bool = False):
     """
-    Load the correct logo variant (_black.png or _white.png),
-    scale it to target_h tall (preserving aspect ratio, capped at max_w),
-    and composite it onto canvas at (x, y).
-    Returns True if a logo was found and placed, False otherwise.
+    Load the correct logo variant (_white.png for black cards, _black.png
+    for white cards), scale it to target_h tall (preserving aspect ratio,
+    capped at max_w), and composite it onto canvas at (x, y).
+    Returns the width of the pasted logo if found and placed, 0 otherwise.
     """
     logo = _load_pack_logo(pack_id, is_black)
     if logo is None:
-        return False
+        return 0
 
     orig_w, orig_h = logo.size
     scale = target_h / orig_h
@@ -227,7 +229,7 @@ def _paste_logo(canvas: Image.Image, pack_id: str,
     canvas_rgba = canvas.convert("RGBA")
     canvas_rgba.paste(logo_scaled, (x, y), logo_scaled)
     canvas.paste(canvas_rgba.convert("RGB"), (0, 0))
-    return True
+    return new_w
 
 
 # ── Text Wrapping ────────────────────────────────────────────────────────────
@@ -284,29 +286,38 @@ def _draw_footer(img, draw, x, y,
                  is_black, pack_id, pack_name):
     """
     Draw the footer area of a card.
-    - If a pack logo image exists for pack_id, paste it scaled to footer_h.
-    - Otherwise draw LOGO_TEXT on line 1 and pack_name on line 2.
+    Always draws LOGO_TEXT ("Cards Against the Wasteland") in the correct color.
+    If a pack logo image exists for pack_id, paste it to the left and shift
+    the text to the right of it.
+    If no logo image, draw LOGO_TEXT on line 1 and pack_name on line 2.
     """
-    logo_col = LOGO_BLACK[:3] if is_black else LOGO_WHITE[:3]
+    logo_col = LOGO_BLACK_FG if is_black else LOGO_WHITE_FG
     footer_y = y + card_h - card_pad - footer_h
 
-    logo_placed = False
+    logo_w = 0
     if pack_id:
-        logo_placed = _paste_logo(
+        logo_w = _paste_logo(
             img, pack_id,
             x=x + card_pad,
             y=footer_y,
             target_h=footer_h,
-            max_w=text_area_w,
+            max_w=text_area_w // 2,
             is_black=is_black)
         draw = ImageDraw.Draw(img)  # refresh after paste
 
-    if not logo_placed:
-        # Text fallback: two lines
-        logo_font = _load_font(FONT_REG_PATH, logo_font_size)
-        pack_font = _load_font(FONT_REG_PATH, pack_font_size)
+    logo_font = _load_font(FONT_REG_PATH, logo_font_size)
+
+    if logo_w > 0:
+        # Logo was placed — draw LOGO_TEXT to the right of the logo
+        text_x = x + card_pad + logo_w + 8
+        text_h = logo_font.getbbox(LOGO_TEXT)[3] - logo_font.getbbox(LOGO_TEXT)[1]
+        text_y = footer_y + (footer_h - text_h) // 2
+        draw.text((text_x, text_y), LOGO_TEXT, fill=logo_col, font=logo_font)
+    else:
+        # No logo — text fallback: two lines
         draw.text((x + card_pad, footer_y), LOGO_TEXT, fill=logo_col, font=logo_font)
         if pack_name:
+            pack_font = _load_font(FONT_REG_PATH, pack_font_size)
             pack_y = y + card_h - card_pad - pack_font_size
             pack_line = pack_name
             while (pack_font.getbbox(pack_line)[2] - pack_font.getbbox(pack_line)[0] > text_area_w
@@ -415,6 +426,11 @@ def _draw_hand_card(img, x, y, text, number,
         img.paste(merged)
 
 
+def _strip_answer_period(answer: str) -> str:
+    """Strip trailing period from an answer for use in blank-filling."""
+    return answer.rstrip('.')
+
+
 def _draw_black_card_filled(img, x, y, card_text, answers,
                              pack_id=None, pack_name=None):
     """Draw a black card with blanks filled in gold."""
@@ -423,33 +439,38 @@ def _draw_black_card_filled(img, x, y, card_text, answers,
     _rounded_rect(draw, (x, y, x + CARD_W, y + CARD_H), CORNER_R, fill=BLACK_CARD_BG)
 
     font = _get_card_font(card_text, bold=True)
-    
-    # If no blanks, append answers after the question
-    if "_" not in card_text:
+
+    has_blanks = "_" in card_text
+
+    # Build display text
+    if not has_blanks:
+        # No blanks — append answers after the question (keep periods)
         full_text = card_text + " " + " ".join(answers)
     else:
+        # Has blanks — fill them in (strip trailing periods from answers)
         full_text = card_text
         for ans in answers:
-            full_text = full_text.replace("_", ans, 1)
+            full_text = full_text.replace("_", _strip_answer_period(ans), 1)
 
     lines = _wrap_text(full_text, font, TEXT_AREA_W)
     line_h = font.getbbox("Ag")[3] - font.getbbox("Ag")[1]
 
     # Build character color map
     color_map = []
-    if "_" not in card_text:
-        # No blanks - card text is white, appended answers are gold
+    if not has_blanks:
+        # No blanks — card text is white, appended answers are gold (keep periods)
         for ch in card_text:
             color_map.append((ch, False))
-        color_map.append((' ', False))  # space between question and answer
+        color_map.append((' ', False))  # space between question and answers
         for ans in answers:
             for ch in ans:
                 color_map.append((ch, True))
             if ans != answers[-1]:  # space between multiple answers
                 color_map.append((' ', True))
     else:
-        # Has blanks - replace underscores with answers
-        temp, answer_texts = card_text, list(answers)
+        # Has blanks — replace underscores with answers (strip trailing periods)
+        temp = card_text
+        answer_texts = [_strip_answer_period(a) for a in answers]
         i = 0
         while i < len(temp):
             if temp[i] == "_" and answer_texts:
@@ -631,7 +652,7 @@ if __name__ == "__main__":
 
     buf3 = render_winner(
         "In his newest and most difficult stunt, David Blaine must escape from _.",
-        ["my inner demons"], pack_id="base", pack_name="🎴 Base Set")
+        ["my inner demons."], pack_id="base", pack_name="🎴 Base Set")
     with open("/tmp/test_winner.png", "wb") as f: f.write(buf3.read())
     print("✅ test_winner.png")
 
