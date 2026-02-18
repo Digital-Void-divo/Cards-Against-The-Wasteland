@@ -310,11 +310,11 @@ def fmt_black(card: dict, answers: list[str] = None) -> str:
     text = card["text"]
     if answers:
         if "_" in text:
-            # Has blanks - fill them in
+            # Has blanks — fill them in, stripping trailing periods from answers
             for ans in answers:
-                text = text.replace("_", f"**{ans}**", 1)
+                text = text.replace("_", f"**{ans.rstrip('.')}**", 1)
         else:
-            # No blanks - append answers
+            # No blanks — append answers after the question (keep periods)
             text = text + " **" + "** **".join(answers) + "**"
         return text
     formatted = text.replace("_", BLANK)
