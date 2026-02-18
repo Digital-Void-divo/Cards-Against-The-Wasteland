@@ -1,5 +1,5 @@
 """
-Cards Against the Wasteland — Discord Bot  v3.0
+Cards Against Humanity — Discord Bot  v3.0
 ============================================
 Fully in-channel with ephemeral interactions. No DMs needed.
 
@@ -350,14 +350,24 @@ def in_progress_names(game: Game) -> list[str]:
 def _build_hand_image(game: Game, player: Player) -> discord.File:
     """Render a player's current hand as a PNG file attachment."""
     submitted = game.submissions.get(player.id, [])
-    hand_img = render_hand(
-        player.hand,
-        white_pack_ids=game.white_pack_ids,
-        white_pack_names=game.white_pack_names,
-        pending=player.pending_picks,
-        submitted=submitted,
-    )
-    return discord.File(hand_img, filename="hand.png")
+    
+    # Ensure player has cards in hand
+    if not player.hand:
+        # Return a placeholder or error - but this shouldn't happen in normal gameplay
+        print(f"WARNING: Player {player.name} has empty hand!")
+    
+    try:
+        hand_img = render_hand(
+            player.hand,
+            white_pack_ids=game.white_pack_ids,
+            white_pack_names=game.white_pack_names,
+            pending=player.pending_picks,
+            submitted=submitted,
+        )
+        return discord.File(hand_img, filename="hand.png")
+    except Exception as e:
+        print(f"ERROR rendering hand for {player.name}: {e}")
+        raise
 
 
 # ── UI VIEWS ─────────────────────────────────────────────────────────────────
@@ -476,7 +486,7 @@ class LobbyView(ui.View):
             total_b    = sum(self.db.pack_info(p)["black_count"] for p in self.game.selected_packs)
             pack_line  = f"\n📦 **Packs:** {pack_names} ({total_w}⬜ {total_b}⬛)"
         embed = discord.Embed(
-            title="🃏 Cards Against the Wasteland",
+            title="🃏 Cards Against Humanity",
             description=f"**{self.game.host.display_name}** is hosting!\n\n"
                         f"🏆 {mode}{pack_line}\n\n**Players:**\n{self._player_list()}",
             color=C.BLACK)
@@ -873,14 +883,14 @@ cards_db     = CardDB(CARDS_FILE)
 @bot.event
 async def on_ready():
     print(f"✅  {bot.user} online | {cards_db.total_white}⬜ {cards_db.total_black}⬛ across {len(cards_db.pack_ids)} packs")
-    await bot.change_presence(activity=discord.Game(name="Cards Against the Wasteland | !cah help"))
+    await bot.change_presence(activity=discord.Game(name="Cards Against Humanity | !cah help"))
 
 
 # ── Commands ─────────────────────────────────────────────────────────────────
 
 @bot.command(name="help")
 async def cah_help(ctx: commands.Context):
-    embed = discord.Embed(title="🃏 Cards Against the Wasteland", description="*A horrible card game for horrible people.*", color=C.BLACK)
+    embed = discord.Embed(title="🃏 Cards Against Humanity", description="*A horrible card game for horrible people.*", color=C.BLACK)
     embed.add_field(name="🎮 Starting", inline=False, value=(
         "`!cah start [score]` — Full game (default: first to 7)\n"
         "`!cah quickround` — Single round\n"
@@ -1100,12 +1110,19 @@ async def cah_drawtest(ctx: commands.Context):
         white_pack_names={white: wpname_map.get(white, "")})
     white_file = discord.File(white_img, filename="hand.png")
 
+    # Render winner card showing the answer filled in
+    winner_img = render_winner(
+        black["text"], [white],
+        pack_id=black.get("pack_id", ""),
+        pack_name=black.get("pack_name", ""))
+    winner_file = discord.File(winner_img, filename="winner.png")
+
     await ctx.send(
         embed=discord.Embed(
             title="🧪 Draw Test",
-            description=f"⬛ **Black:** {black['text']}\n\n⬜ **White:** {white}",
+            description=f"⬛ **Black:** {black['text']}\n\n⬜ **White:** {white}\n\n🏆 **Winner:** {fmt_black(black, [white])}",
             color=C.DARK),
-        files=[black_file, white_file])
+        files=[black_file, white_file, winner_file])
 
 
 @bot.event
