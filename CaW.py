@@ -30,8 +30,6 @@ DEFAULT_WIN_SCORE = 7
 BLANK = "▬▬▬▬▬"
 
 # How many recently-used cards (per type) to push to the bottom of new decks.
-# Higher = more variety across consecutive games, but too high with a small
-# card pool means the "stale" section dominates and order becomes predictable.
 RECENT_MEMORY_WHITE = 150
 RECENT_MEMORY_BLACK = 60
 
@@ -59,6 +57,18 @@ class C:
     DARK   = 0x2c2f33
 
 
+# ── Avatar Helper ────────────────────────────────────────────────────────────
+
+async def fetch_avatar_bytes(member: discord.Member, size: int = 128) -> bytes | None:
+    """Download a member's display avatar as PNG bytes. Returns None on failure."""
+    try:
+        asset = member.display_avatar.with_size(size).with_format("png")
+        return await asset.read()
+    except Exception as e:
+        print(f"WARNING: Could not fetch avatar for {member.display_name}: {e}")
+        return None
+
+
 # ── Card Database ────────────────────────────────────────────────────────────
 
 class CardDB:
@@ -81,13 +91,6 @@ class CardDB:
         }
 
     def build_deck(self, pack_ids: list[str]) -> tuple[list[str], list[dict], dict[str, str], dict[str, str]]:
-        """
-        Returns:
-          whites       — list of white card texts
-          blacks       — list of black card dicts (with 'pack_id' and 'pack_name' injected)
-          white_pack_ids   — {card_text: pack_id}
-          white_pack_names — {card_text: pack display name}
-        """
         whites, blacks = [], []
         white_pack_ids:   dict[str, str] = {}
         white_pack_names: dict[str, str] = {}
@@ -156,11 +159,9 @@ class Deck:
 
 
 # ── Recent-Card Memory ───────────────────────────────────────────────────────
-# Tracks cards seen in previous games per channel so new games feel fresh.
 
 @dataclass
 class ChannelRecent:
-    """Sliding window of recently-used card texts for one channel."""
     whites: list[str] = field(default_factory=list)
     blacks: list[str] = field(default_factory=list)
 
@@ -169,7 +170,6 @@ class ChannelRecent:
             if c in self.whites:
                 self.whites.remove(c)
             self.whites.append(c)
-        # Trim oldest entries
         if len(self.whites) > RECENT_MEMORY_WHITE:
             self.whites = self.whites[-RECENT_MEMORY_WHITE:]
 
@@ -182,7 +182,7 @@ class ChannelRecent:
             self.blacks = self.blacks[-RECENT_MEMORY_BLACK:]
 
 
-recent_cards: dict[int, ChannelRecent] = {}   # channel_id -> ChannelRecent
+recent_cards: dict[int, ChannelRecent] = {}
 
 
 # ── Game State ───────────────────────────────────────────────────────────────
@@ -224,7 +224,6 @@ class Game:
         self.deck:      Optional[Deck] = None
         self.selected_packs: list[str] = []
 
-        # Per-card pack lookups: card_text -> pack_id / pack display name
         self.white_pack_ids:   dict[str, str] = {}
         self.white_pack_names: dict[str, str] = {}
 
@@ -240,10 +239,8 @@ class Game:
 
         self.round_view: Optional["RoundPlayView"] = None
 
-        # Reference to this channel's recent-card memory
         self.channel_recent = recent_cards.setdefault(channel.id, ChannelRecent())
 
-        # Track every card seen this game (recorded at end)
         self._seen_whites: set[str] = set()
         self._seen_blacks: set[str] = set()
 
@@ -286,21 +283,19 @@ class Game:
         self.selected_packs = pack_ids
         whites, blacks, white_pack_ids, white_pack_names = db.build_deck(pack_ids)
 
-        # Partition whites: fresh cards drawn first (top of pile = end of list)
         recent_white_set = set(self.channel_recent.whites)
         fresh_w = [w for w in whites if w not in recent_white_set]
         stale_w = [w for w in whites if w in recent_white_set]
         random.shuffle(fresh_w)
         random.shuffle(stale_w)
-        ordered_whites = stale_w + fresh_w  # fresh on top (popped first)
+        ordered_whites = stale_w + fresh_w
 
-        # Partition blacks the same way
         recent_black_set = set(self.channel_recent.blacks)
         fresh_b = [b for b in blacks if b["text"] not in recent_black_set]
         stale_b = [b for b in blacks if b["text"] in recent_black_set]
         random.shuffle(fresh_b)
         random.shuffle(stale_b)
-        ordered_blacks = stale_b + fresh_b  # fresh on top
+        ordered_blacks = stale_b + fresh_b
 
         self.deck             = Deck(ordered_whites, ordered_blacks, preshuffle=False)
         self.white_pack_ids   = white_pack_ids
@@ -372,8 +367,6 @@ class Game:
         return None
 
     def record_recent(self):
-        """Push all cards seen this game into the channel's recent-card memory."""
-        # Also grab anything still in player hands
         for player in self.players.values():
             self._seen_whites.update(player.hand)
             self._seen_whites.update(player.pending_picks)
@@ -392,11 +385,9 @@ def fmt_black(card: dict, answers: list[str] = None) -> str:
     text = card["text"]
     if answers:
         if "_" in text:
-            # Has blanks — fill them in, stripping trailing periods from answers
             for ans in answers:
                 text = text.replace("_", f"**{ans.rstrip('.')}**", 1)
         else:
-            # No blanks — append answers after the question (keep periods)
             text = text + " **" + "** **".join(answers) + "**"
         return text
     formatted = text.replace("_", BLANK)
@@ -430,13 +421,11 @@ def in_progress_names(game: Game) -> list[str]:
 # ── Hand image helper ─────────────────────────────────────────────────────────
 
 def _build_hand_image(game: Game, player: Player) -> discord.File:
-    """Render a player's current hand as a PNG file attachment."""
     submitted = game.submissions.get(player.id, [])
-    
-    # Ensure player has cards in hand
+
     if not player.hand:
         print(f"WARNING: Player {player.name} has empty hand!")
-    
+
     try:
         hand_img = render_hand(
             player.hand,
@@ -633,7 +622,6 @@ class EphemeralHandSelect(ui.View):
         self.game.submit_card_by_value(self.player.id, card_text)
 
         if self.pick_num >= self.total_picks:
-            # All picks done
             self.game.finalize_submission(self.player.id)
             self.done = True
             self.stop()
@@ -646,7 +634,6 @@ class EphemeralHandSelect(ui.View):
             if self.game.all_submitted():
                 await begin_judging_phase(self.game)
         else:
-            # Need another pick
             self.done = True
             self.stop()
             ordinals    = {1: "first", 2: "second", 3: "third"}
@@ -814,10 +801,14 @@ class CzarPickDropdown(ui.View):
         winning_cards = self.game.submissions[winner.id]
         filled        = fmt_black(self.game.black_card, winning_cards)
 
+        # Fetch the winner's avatar for the winner card
+        winner_avatar = await fetch_avatar_bytes(winner.member)
+
         winner_img = render_winner(
             self.game.black_card["text"], winning_cards,
             pack_id=self.game.black_card.get("pack_id", ""),
-            pack_name=self.game.black_card.get("pack_name", ""))
+            pack_name=self.game.black_card.get("pack_name", ""),
+            avatar_bytes=winner_avatar)
         card_file = discord.File(winner_img, filename="winner.png")
 
         await interaction.response.edit_message(
@@ -871,10 +862,14 @@ async def start_round(game: Game):
     czar  = game.czar
     non_czar = [game.players[pid].name for pid in game.players if pid != game.czar_id]
 
+    # Fetch the czar's avatar for the black card image
+    czar_avatar = await fetch_avatar_bytes(czar.member)
+
     card_img  = render_black_card(
         black["text"], black["pick"],
         pack_id=black.get("pack_id", ""),
-        pack_name=black.get("pack_name", ""))
+        pack_name=black.get("pack_name", ""),
+        avatar_bytes=czar_avatar)
     card_file = discord.File(card_img, filename="black_card.png")
 
     embed = discord.Embed(title=f"━━━━ Round {game.round_number} ━━━━", color=C.BLACK)
@@ -1184,10 +1179,14 @@ async def cah_drawtest(ctx: commands.Context):
     white = random.choice(all_whites)
     black = random.choice(all_blacks)
 
+    # Fetch command author's avatar for the test render
+    test_avatar = await fetch_avatar_bytes(ctx.author)
+
     black_img  = render_black_card(
         black["text"], black["pick"],
         pack_id=black.get("pack_id", ""),
-        pack_name=black.get("pack_name", ""))
+        pack_name=black.get("pack_name", ""),
+        avatar_bytes=test_avatar)
     black_file = discord.File(black_img, filename="black_card.png")
 
     white_img  = render_hand(
@@ -1196,11 +1195,11 @@ async def cah_drawtest(ctx: commands.Context):
         white_pack_names={white: wpname_map.get(white, "")})
     white_file = discord.File(white_img, filename="hand.png")
 
-    # Render winner card showing the answer filled in
     winner_img = render_winner(
         black["text"], [white],
         pack_id=black.get("pack_id", ""),
-        pack_name=black.get("pack_name", ""))
+        pack_name=black.get("pack_name", ""),
+        avatar_bytes=test_avatar)
     winner_file = discord.File(winner_img, filename="winner.png")
 
     await ctx.send(
