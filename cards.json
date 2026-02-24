@@ -161,8 +161,10 @@
     "server": {
       "name": "Server Pack",
       "description": "Server-specific options.",
-      "white": ["Roll a 20 and punch him straight in the balls", "TEXAS", "Capybaras wearing berets", "Dhante", "Tachybara", "Lucidia", "DiVo", "Toasty Katie", "Nyxi"],
+      "white": ["Pixelated bukkake...", "Roll a 20 and punch him straight in the balls", "TEXAS", "Capybaras wearing berets", "Dhante", "Tachybara", "Lucidia", "DiVo", "Toasty Katie", "Nyxi"],
       "black": [
+        {"text": "I can _ that man, and not in a racist way.", "pick": 1},
+        {"text": "I never stood a chance against _.", "pick": 1},
         {"text": "A toast from Toasty! Thank you _ for _.", "pick": 2},
         {"text": "I joined voice, only to become an unfortunate witness for a conversation about _.", "pick": 1},
         {"text": "What is DiVo making now?", "pick": 1},
