@@ -29,6 +29,12 @@ MIN_PLAYERS = 3
 DEFAULT_WIN_SCORE = 7
 BLANK = "▬▬▬▬▬"
 
+# How many recently-used cards (per type) to push to the bottom of new decks.
+# Higher = more variety across consecutive games, but too high with a small
+# card pool means the "stale" section dominates and order becomes predictable.
+RECENT_MEMORY_WHITE = 150
+RECENT_MEMORY_BLACK = 60
+
 _script_dir = Path(os.path.dirname(os.path.abspath(__file__)))
 if (_script_dir / "cards.json").exists():
     CARDS_FILE = _script_dir / "cards.json"
@@ -85,15 +91,21 @@ class CardDB:
         whites, blacks = [], []
         white_pack_ids:   dict[str, str] = {}
         white_pack_names: dict[str, str] = {}
+        seen_white: set[str] = set()
+        seen_black: set[str] = set()
         for pid in pack_ids:
             if pid in self.packs:
                 pack_name = self.packs[pid]["name"]
                 for w in self.packs[pid]["white"]:
-                    whites.append(w)
-                    white_pack_ids[w]   = pid
-                    white_pack_names[w] = pack_name
+                    if w not in seen_white:
+                        seen_white.add(w)
+                        whites.append(w)
+                        white_pack_ids[w]   = pid
+                        white_pack_names[w] = pack_name
                 for b in self.packs[pid]["black"]:
-                    blacks.append({**b, "pack_id": pid, "pack_name": pack_name})
+                    if b["text"] not in seen_black:
+                        seen_black.add(b["text"])
+                        blacks.append({**b, "pack_id": pid, "pack_name": pack_name})
         return whites, blacks, white_pack_ids, white_pack_names
 
     @property
@@ -106,13 +118,14 @@ class CardDB:
 
 
 class Deck:
-    def __init__(self, whites: list[str], blacks: list[dict]):
+    def __init__(self, whites: list[str], blacks: list[dict], preshuffle: bool = True):
         self.white_draw    = list(whites)
         self.black_draw    = list(blacks)
         self.white_discard: list[str]  = []
         self.black_discard: list[dict] = []
-        random.shuffle(self.white_draw)
-        random.shuffle(self.black_draw)
+        if preshuffle:
+            random.shuffle(self.white_draw)
+            random.shuffle(self.black_draw)
 
     def draw_white(self, n: int = 1) -> list[str]:
         cards = []
@@ -140,6 +153,36 @@ class Deck:
 
     def discard_black(self, card: dict):
         self.black_discard.append(card)
+
+
+# ── Recent-Card Memory ───────────────────────────────────────────────────────
+# Tracks cards seen in previous games per channel so new games feel fresh.
+
+@dataclass
+class ChannelRecent:
+    """Sliding window of recently-used card texts for one channel."""
+    whites: list[str] = field(default_factory=list)
+    blacks: list[str] = field(default_factory=list)
+
+    def add_whites(self, cards: list[str]):
+        for c in cards:
+            if c in self.whites:
+                self.whites.remove(c)
+            self.whites.append(c)
+        # Trim oldest entries
+        if len(self.whites) > RECENT_MEMORY_WHITE:
+            self.whites = self.whites[-RECENT_MEMORY_WHITE:]
+
+    def add_blacks(self, texts: list[str]):
+        for t in texts:
+            if t in self.blacks:
+                self.blacks.remove(t)
+            self.blacks.append(t)
+        if len(self.blacks) > RECENT_MEMORY_BLACK:
+            self.blacks = self.blacks[-RECENT_MEMORY_BLACK:]
+
+
+recent_cards: dict[int, ChannelRecent] = {}   # channel_id -> ChannelRecent
 
 
 # ── Game State ───────────────────────────────────────────────────────────────
@@ -197,6 +240,13 @@ class Game:
 
         self.round_view: Optional["RoundPlayView"] = None
 
+        # Reference to this channel's recent-card memory
+        self.channel_recent = recent_cards.setdefault(channel.id, ChannelRecent())
+
+        # Track every card seen this game (recorded at end)
+        self._seen_whites: set[str] = set()
+        self._seen_blacks: set[str] = set()
+
     def add_player(self, member: discord.Member) -> bool:
         if member.id in self.players:
             return False
@@ -235,9 +285,24 @@ class Game:
     def setup_deck(self, pack_ids: list[str], db: CardDB):
         self.selected_packs = pack_ids
         whites, blacks, white_pack_ids, white_pack_names = db.build_deck(pack_ids)
-        random.shuffle(whites)
-        random.shuffle(blacks)
-        self.deck             = Deck(whites, blacks)
+
+        # Partition whites: fresh cards drawn first (top of pile = end of list)
+        recent_white_set = set(self.channel_recent.whites)
+        fresh_w = [w for w in whites if w not in recent_white_set]
+        stale_w = [w for w in whites if w in recent_white_set]
+        random.shuffle(fresh_w)
+        random.shuffle(stale_w)
+        ordered_whites = stale_w + fresh_w  # fresh on top (popped first)
+
+        # Partition blacks the same way
+        recent_black_set = set(self.channel_recent.blacks)
+        fresh_b = [b for b in blacks if b["text"] not in recent_black_set]
+        stale_b = [b for b in blacks if b["text"] in recent_black_set]
+        random.shuffle(fresh_b)
+        random.shuffle(stale_b)
+        ordered_blacks = stale_b + fresh_b  # fresh on top
+
+        self.deck             = Deck(ordered_whites, ordered_blacks, preshuffle=False)
         self.white_pack_ids   = white_pack_ids
         self.white_pack_names = white_pack_names
 
@@ -247,11 +312,14 @@ class Game:
         self.submissions.clear()
         self.submission_order.clear()
         self.black_card = self.deck.draw_black()
+        self._seen_blacks.add(self.black_card["text"])
         for player in self.players.values():
             player.pending_picks.clear()
             deficit = HAND_SIZE - len(player.hand)
             if deficit > 0:
-                player.hand.extend(self.deck.draw_white(deficit))
+                drawn = self.deck.draw_white(deficit)
+                self._seen_whites.update(drawn)
+                player.hand.extend(drawn)
         return self.black_card
 
     def submit_card_by_value(self, player_id: int, card_text: str):
@@ -303,6 +371,20 @@ class Game:
                 return p
         return None
 
+    def record_recent(self):
+        """Push all cards seen this game into the channel's recent-card memory."""
+        # Also grab anything still in player hands
+        for player in self.players.values():
+            self._seen_whites.update(player.hand)
+            self._seen_whites.update(player.pending_picks)
+        for cards in self.submissions.values():
+            self._seen_whites.update(cards)
+        if self.black_card:
+            self._seen_blacks.add(self.black_card["text"])
+
+        self.channel_recent.add_whites(list(self._seen_whites))
+        self.channel_recent.add_blacks(list(self._seen_blacks))
+
 
 # ── Formatting ───────────────────────────────────────────────────────────────
 
@@ -353,7 +435,6 @@ def _build_hand_image(game: Game, player: Player) -> discord.File:
     
     # Ensure player has cards in hand
     if not player.hand:
-        # Return a placeholder or error - but this shouldn't happen in normal gameplay
         print(f"WARNING: Player {player.name} has empty hand!")
     
     try:
@@ -758,6 +839,7 @@ class CzarPickDropdown(ui.View):
         game_winner = self.game.check_game_over()
         if game_winner:
             self.game.phase = Phase.FINISHED
+            self.game.record_recent()
             await self.game.channel.send(embed=discord.Embed(
                 title="🎊  GAME OVER  🎊",
                 description=f"# 🏆 {game_winner.name} wins!\n\nwith **{game_winner.score}** points\n\n**Final Scores:**\n{fmt_scores(self.game.players)}",
@@ -767,6 +849,7 @@ class CzarPickDropdown(ui.View):
             return
 
         if self.game.mode == GameMode.ADHOC:
+            self.game.record_recent()
             await self.game.channel.send(embed=discord.Embed(
                 title="✅ Quick Round Complete!",
                 description=f"Thanks for playing!\n\n{fmt_scores(self.game.players)}",
@@ -1016,6 +1099,7 @@ async def cah_remove(ctx: commands.Context, member: discord.Member = None):
     if len(game.players) < MIN_PLAYERS:
         await ctx.send("⚠️ Not enough players. Game over!")
         game.phase = Phase.FINISHED
+        game.record_recent()
         del active_games[ctx.channel.id]
         return
     if was_czar and game.phase in (Phase.PLAYING, Phase.JUDGING):
@@ -1044,6 +1128,7 @@ async def cah_leave(ctx: commands.Context):
     if len(game.players) < MIN_PLAYERS:
         await ctx.send("⚠️ Not enough players. Game over!")
         game.phase = Phase.FINISHED
+        game.record_recent()
         del active_games[ctx.channel.id]
         return
     if was_czar and game.phase in (Phase.PLAYING, Phase.JUDGING):
@@ -1070,6 +1155,7 @@ async def cah_end(ctx: commands.Context):
         return await ctx.send("Only the host can end the game.")
     if game.round_view:
         game.round_view.stop()
+    game.record_recent()
     await ctx.send(embed=discord.Embed(
         title="🛑 Game Ended",
         description=f"**{ctx.author.display_name}** ended the game.\n\n**Final Scores:**\n{fmt_scores(game.players)}",
