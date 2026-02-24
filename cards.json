@@ -9,1039 +9,325 @@
     "base": {
       "name": "\ud83c\udfb4 Base Set",
       "description": "The original Cards Against Humanity base game.",
-      "white": [
-        "Coat hanger abortions.",
-        "The Big Bang.",
-        "Tasteful sideboob.",
-        "Incest.",
-        "A windmill full of corpses.",
-        "Hormone injections.",
-        "Guy Fieri.",
-        "Kim Jong-un.",
-        "A tiny horse.",
-        "Vehicular manslaughter.",
-        "The Trail of Tears.",
-        "A micropenis.",
-        "European history.",
-        "Dying.",
-        "The clitoris.",
-        "Estrogen.",
-        "Lance Armstrong's missing testicle.",
-        "A bleached asshole.",
-        "The three-fifths compromise.",
-        "Agriculture.",
-        "A mime having a stroke.",
-        "Pooping back and forth. Forever.",
-        "Flying sex snakes.",
-        "An asymmetric boob job.",
-        "Flesh-eating bacteria.",
-        "A falcon with a cap on its head.",
-        "Genghis Khan.",
-        "Object permanence.",
-        "A snapping turtle biting the tip of your penis.",
-        "Sexting.",
-        "The violation of our most basic human rights.",
-        "Sean Penn.",
-        "Bingeing and purging.",
-        "Being a motherfucking sorcerer.",
-        "German dungeon porn.",
-        "Altar boys.",
-        "Figgy pudding.",
-        "Brown people.",
-        "Mr. Clean, right behind you.",
-        "Two midgets shitting into a bucket.",
-        "Waiting 'til marriage.",
-        "A salty surprise.",
-        "Praying the gay away.",
-        "The placenta.",
-        "A bag of magic beans.",
-        "Winking at old people.",
-        "Lumberjack fantasies.",
-        "Not giving a shit about the Third World.",
-        "The heart of a child.",
-        "Overcompensation.",
-        "Elderly Japanese men.",
-        "Full-frontal nudity.",
-        "Land mines.",
-        "Authentic Mexican cuisine.",
-        "Soup that is too hot.",
-        "Emotions.",
-        "The American Dream.",
-        "Becoming a blueberry.",
-        "Passive-aggressive Post-it notes.",
-        "Giving 110%.",
-        "A stray pube.",
-        "Teaching a robot to love.",
-        "The token minority.",
-        "Being rich.",
-        "Republicans.",
-        "Democrats.",
-        "Poor life choices.",
-        "The Pope.",
-        "Nickelback.",
-        "Actually taking candy from a baby.",
-        "Smegma.",
-        "A robust Mongoloid.",
-        "A cooler full of organs.",
-        "Being on fire.",
-        "Science.",
-        "Daddy issues.",
-        "A disappointing birthday party.",
-        "Fingering.",
-        "Rap music.",
-        "White privilege.",
-        "Getting drunk on mouthwash.",
-        "The profoundly handicapped.",
-        "Ethnic cleansing.",
-        "Pictures of boobs.",
-        "Natural male enhancement.",
-        "A middle-aged man on roller blades.",
-        "A monkey smoking a cigar.",
-        "The KKK.",
-        "A mopey zoo lion.",
-        "A time travel paradox.",
-        "Glenn Beck catching a cold.",
-        "Boogers.",
-        "Puberty.",
-        "Pulling out.",
-        "My sex life.",
-        "The South.",
-        "Hot Pockets.",
-        "Dead babies.",
-        "Michelle Obama's arms.",
-        "Viagra.",
-        "Chainsaws for hands.",
-        "Amputees.",
-        "A can of whoop-ass.",
-        "Child beauty pageants.",
-        "Chunks of dead prostitute.",
-        "Gloryholes.",
-        "Seduction.",
-        "The Boy Scouts of America.",
-        "Opposable thumbs.",
-        "MechaHitler.",
-        "Pedophiles.",
-        "Edible underpants.",
-        "Kids with ass cancer.",
-        "Doing the right thing.",
-        "Auschwitz.",
-        "Jerking off into a pool of children's tears.",
-        "A lifetime of sadness.",
-        "A drunk baby.",
-        "Roofies.",
-        "Spontaneous combustion.",
-        "Friends who eat all the snacks.",
-        "My inner demons.",
-        "Leaving an awkward voicemail.",
-        "Dick fingers.",
-        "Exactly what you'd expect.",
-        "Sweet, sweet vengeance.",
-        "The homosexual agenda.",
-        "Same-sex ice dancing.",
-        "Swooping.",
-        "Assless chaps.",
-        "Foreskin.",
-        "A good sniff.",
-        "Friction.",
-        "Grave robbing.",
-        "The Hamburglar.",
-        "Crystal meth.",
-        "Poorly-timed Holocaust jokes.",
-        "Pixelated bukkake.",
-        "An erection that lasts longer than four hours.",
-        "Catapults.",
-        "Tom Cruise.",
-        "Hunting accidents.",
-        "Mutually-assured destruction.",
-        "Getting really high.",
-        "Racism.",
-        "Silence.",
-        "A thermonuclear detonation.",
-        "Puppies!",
-        "Vigilante justice.",
-        "Dental dams.",
-        "A gassy antelope.",
-        "Road kill.",
-        "A brain tumor.",
-        "The Wonder Years.",
-        "God.",
-        "Teenage pregnancy.",
-        "Stephen Hawking talking dirty.",
-        "A bucket of fish heads.",
-        "Nipple blades.",
-        "AIDS.",
-        "Hope.",
-        "An Oedipus complex.",
-        "Date rape.",
-        "A saxophone solo.",
-        "The entire Mormon Tabernacle Choir.",
-        "Eugenics.",
-        "My collection of high-tech sex toys.",
-        "A spicy meatball.",
-        "A murder most foul.",
-        "BATMAN!!!",
-        "Advice from a wise, old black man.",
-        "A sad handjob.",
-        "New age music.",
-        "Anal beads.",
-        "Count Chocula.",
-        "A subscription to Men's Fitness.",
-        "Horrifying laser hair removal.",
-        "Breaking out into song and dance.",
-        "My genitals.",
-        "My humps.",
-        "Used panties.",
-        "Toni Morrison's vagina.",
-        "Picking up girls at the abortion clinic.",
-        "The invisible hand.",
-        "A zesty breakfast burrito.",
-        "Peeing a little bit.",
-        "Autocannibalism.",
-        "A pyramid of severed heads.",
-        "Pac-Man uncontrollably guzzling cum.",
-        "The Blood of Christ.",
-        "Another goddamn vampire movie.",
-        "An M. Night Shyamalan plot twist.",
-        "The Rapture.",
-        "Party poopers.",
-        "Whipping it out.",
-        "An ice pick lobotomy.",
-        "Hulk Hogan.",
-        "Justin Bieber.",
-        "Space Jam.",
-        "Kanye West.",
-        "Grandpa's war stories.",
-        "The entire cast of Downton Abbey.",
-        "A pirate walking the plank.",
-        "Unfathomable stupidity.",
-        "Drinking alone.",
-        "A 55-gallon drum of lube.",
-        "Self-loathing.",
-        "Child leashes.",
-        "Ghosts.",
-        "A pumpkin full of Penthouse magazines.",
-        "The Tooth Fairy.",
-        "Menstrual rage.",
-        "Pandemonium.",
-        "White people.",
-        "Dry heaving.",
-        "Grandma.",
-        "Saxophone music.",
-        "The Jews.",
-        "Italians.",
-        "Stalin.",
-        "Former President George W. Bush.",
-        "Barack Obama.",
-        "Expectation.",
-        "Herbert the Pervert.",
-        "My relationship status.",
-        "Balls.",
-        "An underwhelming hand job.",
-        "Man meat.",
-        "RoboCop.",
-        "GoGurt.",
-        "Multiple stab wounds.",
-        "Scrubbing under the folds.",
-        "Alcoholism.",
-        "Home videos of 9/11.",
-        "The terrorists.",
-        "The Virginia Tech Massacre.",
-        "A bop it.",
-        "Keanu Reeves.",
-        "Hospice care.",
-        "Half-assed foreplay.",
-        "Sarah Palin.",
-        "Bill Nye the Science Guy.",
-        "Bees?",
-        "Harry Potter erotica.",
-        "Licking things to claim them as your own.",
-        "A horde of Vikings.",
-        "Yeast.",
-        "The Amish.",
-        "72 virgins.",
-        "Judge Judy.",
-        "Daniel Radcliffe's delicious asshole.",
-        "Powerful thighs.",
-        "World peace.",
-        "Police brutality.",
-        "Oompa-Loompas.",
-        "A crappy little hand.",
-        "Tangled Slinky.",
-        "Walking in on Dad peeing sitting down.",
-        "A fetus.",
-        "Dead parents.",
-        "An honest cop.",
-        "The milk man.",
-        "A defective condom.",
-        "Cheating in the Special Olympics.",
-        "Cybernetic enhancements.",
-        "Seeing Grandma naked.",
-        "A really cool hat.",
-        "My vagina.",
-        "Extremely tight pants.",
-        "Not reciprocating oral sex.",
-        "8 oz. of sweet Mexican black-tar heroin.",
-        "A homoerotic volleyball montage.",
-        "Pretending to care.",
-        "A balanced breakfast.",
-        "Necrophilia.",
-        "Farting and walking away.",
-        "A micropig wearing a tiny raincoat and booties.",
-        "The glass ceiling.",
-        "Fiery poops.",
-        "Third base.",
-        "A sausage festival.",
-        "The wireless.",
-        "A bloody mess.",
-        "Morgan Freeman's voice.",
-        "Thor's hammer.",
-        "Old-people smell.",
-        "Children on leashes.",
-        "Battlefield amputations.",
-        "A man in yoga pants with a ponytail and feathered earrings.",
-        "Holding a grudge.",
-        "A magic trick gone terribly wrong.",
-        "Passive aggression.",
-        "The Chinese gymnastics team.",
-        "Women in yogurt commercials.",
-        "Dropping a chandelier on your enemies and riding the chain up.",
-        "A mating display."
-      ],
+      "white": ["Coat hanger abortions.", "The Big Bang.", "Tasteful sideboob.", "Incest.", "A windmill full of corpses.", "Hormone injections.", "Guy Fieri.", "Kim Jong-un.", "A tiny horse.", "Vehicular manslaughter.", "The Trail of Tears.", "A micropenis.", "European history.", "Dying.", "The clitoris.", "Estrogen.", "Lance Armstrong's missing testicle.", "A bleached asshole.", "The three-fifths compromise.", "Agriculture.", "A mime having a stroke.", "Pooping back and forth. Forever.", "Flying sex snakes.", "An asymmetric boob job.", "Flesh-eating bacteria.", "A falcon with a cap on its head.", "Genghis Khan.", "Object permanence.", "A snapping turtle biting the tip of your penis.", "Sexting.", "The violation of our most basic human rights.", "Sean Penn.", "Bingeing and purging.", "Being a motherfucking sorcerer.", "German dungeon porn.", "Altar boys.", "Figgy pudding.", "Brown people.", "Mr. Clean, right behind you.", "Two midgets shitting into a bucket.", "Waiting 'til marriage.", "A salty surprise.", "Praying the gay away.", "The placenta.", "A bag of magic beans.", "Winking at old people.", "Lumberjack fantasies.", "Not giving a shit about the Third World.", "The heart of a child.", "Overcompensation.", "Elderly Japanese men.", "Full-frontal nudity.", "Land mines.", "Authentic Mexican cuisine.", "Soup that is too hot.", "Emotions.", "The American Dream.", "Becoming a blueberry.", "Passive-aggressive Post-it notes.", "Giving 110%.", "A stray pube.", "Teaching a robot to love.", "The token minority.", "Being rich.", "Republicans.", "Democrats.", "Poor life choices.", "The Pope.", "Nickelback.", "Actually taking candy from a baby.", "Smegma.", "A robust Mongoloid.", "A cooler full of organs.", "Being on fire.", "Science.", "Daddy issues.", "A disappointing birthday party.", "Fingering.", "Rap music.", "White privilege.", "Getting drunk on mouthwash.", "The profoundly handicapped.", "Ethnic cleansing.", "Pictures of boobs.", "Natural male enhancement.", "A middle-aged man on roller blades.", "A monkey smoking a cigar.", "The KKK.", "A mopey zoo lion.", "A time travel paradox.", "Glenn Beck catching a cold.", "Boogers.", "Puberty.", "Pulling out.", "My sex life.", "The South.", "Hot Pockets.", "Dead babies.", "Michelle Obama's arms.", "Viagra.", "Chainsaws for hands.", "Amputees.", "A can of whoop-ass.", "Child beauty pageants.", "Chunks of dead prostitute.", "Gloryholes.", "Seduction.", "The Boy Scouts of America.", "Opposable thumbs.", "MechaHitler.", "Pedophiles.", "Edible underpants.", "Kids with ass cancer.", "Doing the right thing.", "Auschwitz.", "Jerking off into a pool of children's tears.", "A lifetime of sadness.", "A drunk baby.", "Roofies.", "Spontaneous combustion.", "Friends who eat all the snacks.", "My inner demons.", "Leaving an awkward voicemail.", "Dick fingers.", "Exactly what you'd expect.", "Sweet, sweet vengeance.", "The homosexual agenda.", "Same-sex ice dancing.", "Swooping.", "Assless chaps.", "Foreskin.", "A good sniff.", "Friction.", "Grave robbing.", "The Hamburglar.", "Crystal meth.", "Poorly-timed Holocaust jokes.", "Pixelated bukkake.", "An erection that lasts longer than four hours.", "Catapults.", "Tom Cruise.", "Hunting accidents.", "Mutually-assured destruction.", "Getting really high.", "Racism.", "Silence.", "A thermonuclear detonation.", "Puppies!", "Vigilante justice.", "Dental dams.", "A gassy antelope.", "Road kill.", "A brain tumor.", "The Wonder Years.", "God.", "Teenage pregnancy.", "Stephen Hawking talking dirty.", "A bucket of fish heads.", "Nipple blades.", "AIDS.", "Hope.", "An Oedipus complex.", "Date rape.", "A saxophone solo.", "The entire Mormon Tabernacle Choir.", "Eugenics.", "My collection of high-tech sex toys.", "A spicy meatball.", "A murder most foul.", "BATMAN!!!", "Advice from a wise, old black man.", "A sad handjob.", "New age music.", "Anal beads.", "Count Chocula.", "A subscription to Men's Fitness.", "Horrifying laser hair removal.", "Breaking out into song and dance.", "My genitals.", "My humps.", "Used panties.", "Toni Morrison's vagina.", "Picking up girls at the abortion clinic.", "The invisible hand.", "A zesty breakfast burrito.", "Peeing a little bit.", "Autocannibalism.", "A pyramid of severed heads.", "Pac-Man uncontrollably guzzling cum.", "The Blood of Christ.", "Another goddamn vampire movie.", "An M. Night Shyamalan plot twist.", "The Rapture.", "Party poopers.", "Whipping it out.", "An ice pick lobotomy.", "Hulk Hogan.", "Justin Bieber.", "Space Jam.", "Kanye West.", "Grandpa's war stories.", "The entire cast of Downton Abbey.", "A pirate walking the plank.", "Unfathomable stupidity.", "Drinking alone.", "A 55-gallon drum of lube.", "Self-loathing.", "Child leashes.", "Ghosts.", "A pumpkin full of Penthouse magazines.", "The Tooth Fairy.", "Menstrual rage.", "Pandemonium.", "White people.", "Dry heaving.", "Grandma.", "Saxophone music.", "The Jews.", "Italians.", "Stalin.", "Former President George W. Bush.", "Barack Obama.", "Expectation.", "Herbert the Pervert.", "My relationship status.", "Balls.", "An underwhelming hand job.", "Man meat.", "RoboCop.", "GoGurt.", "Multiple stab wounds.", "Scrubbing under the folds.", "Alcoholism.", "Home videos of 9/11.", "The terrorists.", "The Virginia Tech Massacre.", "A bop it.", "Keanu Reeves.", "Hospice care.", "Half-assed foreplay.", "Sarah Palin.", "Bill Nye the Science Guy.", "Bees?", "Harry Potter erotica.", "Licking things to claim them as your own.", "A horde of Vikings.", "Yeast.", "The Amish.", "72 virgins.", "Judge Judy.", "Daniel Radcliffe's delicious asshole.", "Powerful thighs.", "World peace.", "Police brutality.", "Oompa-Loompas.", "A crappy little hand.", "Tangled Slinky.", "Walking in on Dad peeing sitting down.", "A fetus.", "Dead parents.", "An honest cop.", "The milk man.", "A defective condom.", "Cheating in the Special Olympics.", "Cybernetic enhancements.", "Seeing Grandma naked.", "A really cool hat.", "My vagina.", "Extremely tight pants.", "Not reciprocating oral sex.", "8 oz. of sweet Mexican black-tar heroin.", "A homoerotic volleyball montage.", "Pretending to care.", "A balanced breakfast.", "Necrophilia.", "Farting and walking away.", "A micropig wearing a tiny raincoat and booties.", "The glass ceiling.", "Fiery poops.", "Third base.", "A sausage festival.", "The wireless.", "A bloody mess.", "Morgan Freeman's voice.", "Thor's hammer.", "Old-people smell.", "Children on leashes.", "Battlefield amputations.", "A man in yoga pants with a ponytail and feathered earrings.", "Holding a grudge.", "A magic trick gone terribly wrong.", "Passive aggression.", "The Chinese gymnastics team.", "Women in yogurt commercials.", "Dropping a chandelier on your enemies and riding the chain up.", "A mating display."],
       "black": [
-        {
-          "text": "Why can't I sleep at night?",
-          "pick": 1
-        },
-        {
-          "text": "What's that smell?",
-          "pick": 1
-        },
-        {
-          "text": "I got 99 problems but _ ain't one.",
-          "pick": 1
-        },
-        {
-          "text": "Maybe she's born with it. Maybe it's _.",
-          "pick": 1
-        },
-        {
-          "text": "What's the next Happy Meal toy?",
-          "pick": 1
-        },
-        {
-          "text": "Here is the church. Here is the steeple. Open the doors and there is _.",
-          "pick": 1
-        },
-        {
-          "text": "It's a pity that kids these days are all getting involved with _.",
-          "pick": 1
-        },
-        {
-          "text": "During his childhood, Salvador Dali produced hundreds of paintings of _.",
-          "pick": 1
-        },
-        {
-          "text": "Alternative medicine is now embracing the curative powers of _.",
-          "pick": 1
-        },
-        {
-          "text": "And the Academy Award for _ goes to _.",
-          "pick": 2
-        },
-        {
-          "text": "What's my secret power?",
-          "pick": 1
-        },
-        {
-          "text": "What's there a ton of in heaven?",
-          "pick": 1
-        },
-        {
-          "text": "What would grandma find disturbing, yet oddly charming?",
-          "pick": 1
-        },
-        {
-          "text": "I never truly understood _ until I encountered _.",
-          "pick": 2
-        },
-        {
-          "text": "What did I bring back from Mexico?",
-          "pick": 1
-        },
-        {
-          "text": "What don't you want to find in your Chinese food?",
-          "pick": 1
-        },
-        {
-          "text": "What will always get you laid?",
-          "pick": 1
-        },
-        {
-          "text": "White people like _.",
-          "pick": 1
-        },
-        {
-          "text": "_ is a slippery slope that leads to _.",
-          "pick": 2
-        },
-        {
-          "text": "TSA guidelines now prohibit _ on airplanes.",
-          "pick": 1
-        },
-        {
-          "text": "What is Batman's guilty pleasure?",
-          "pick": 1
-        },
-        {
-          "text": "Next from J.K. Rowling: Harry Potter and the Chamber of _.",
-          "pick": 1
-        },
-        {
-          "text": "That's right, I killed _. How, you ask? _.",
-          "pick": 2
-        },
-        {
-          "text": "What ended my last relationship?",
-          "pick": 1
-        },
-        {
-          "text": "MTV's new reality show features eight washed-up celebrities living with _.",
-          "pick": 1
-        },
-        {
-          "text": "I drink to forget _.",
-          "pick": 1
-        },
-        {
-          "text": "I'm sorry, Professor, but I couldn't complete my homework because of _.",
-          "pick": 1
-        },
-        {
-          "text": "What is the gift that keeps on giving?",
-          "pick": 1
-        },
-        {
-          "text": "How did I lose my virginity?",
-          "pick": 1
-        },
-        {
-          "text": "Why do I hurt all over?",
-          "pick": 1
-        },
-        {
-          "text": "What are my parents hiding from me?",
-          "pick": 1
-        },
-        {
-          "text": "In Michael Jackson's final moments, he thought about _.",
-          "pick": 1
-        },
-        {
-          "text": "In a world ravaged by _, our only solace is _.",
-          "pick": 2
-        },
-        {
-          "text": "War! What is it good for?",
-          "pick": 1
-        },
-        {
-          "text": "During sex, I like to think about _.",
-          "pick": 1
-        },
-        {
-          "text": "What's a girl's best friend?",
-          "pick": 1
-        },
-        {
-          "text": "_ + _ = _.",
-          "pick": 3
-        },
-        {
-          "text": "What did the U.S. airdrop to the children of Afghanistan?",
-          "pick": 1
-        },
-        {
-          "text": "What helps Obama unwind?",
-          "pick": 1
-        },
-        {
-          "text": "What did Vin Diesel eat for dinner?",
-          "pick": 1
-        },
-        {
-          "text": "_ is the new black.",
-          "pick": 1
-        },
-        {
-          "text": "When I'm in prison, I'll have _ to keep me company.",
-          "pick": 1
-        },
-        {
-          "text": "What's the most emo?",
-          "pick": 1
-        },
-        {
-          "text": "Instead of coal, Santa now gives the bad children _.",
-          "pick": 1
-        },
-        {
-          "text": "In its new tourism campaign, Detroit proudly proclaims that it has finally eliminated _.",
-          "pick": 1
-        },
-        {
-          "text": "Life for American Indians was forever changed when the White Man introduced them to _.",
-          "pick": 1
-        },
-        {
-          "text": "When I am a billionaire, I shall erect a 50-foot statue to commemorate _.",
-          "pick": 1
-        },
-        {
-          "text": "When I am the President of the United States, I will create the Department of _.",
-          "pick": 1
-        },
-        {
-          "text": "Anthropologists have recently discovered a primitive tribe that worships _.",
-          "pick": 1
-        },
-        {
-          "text": "It's my first day as a teen mom and I already regret _.",
-          "pick": 1
-        },
-        {
-          "text": "When Pharaoh remained unmoved, Moses called down a plague of _.",
-          "pick": 1
-        },
-        {
-          "text": "What's Teach for America using to inspire inner city students to learn?",
-          "pick": 1
-        },
-        {
-          "text": "In the new Disney Channel Original Movie, Hannah Montana struggles with _ for the first time.",
-          "pick": 1
-        },
-        {
-          "text": "What's the crustiest?",
-          "pick": 1
-        },
-        {
-          "text": "Major League Baseball has banned _ for giving players an unfair advantage.",
-          "pick": 1
-        },
-        {
-          "text": "What am I giving up for Lent?",
-          "pick": 1
-        },
-        {
-          "text": "Coming to Broadway this season, _: The Musical.",
-          "pick": 1
-        },
-        {
-          "text": "While the United States raced the Soviet Union to put a man on the moon, the Mexican government funneled millions of pesos into research on _.",
-          "pick": 1
-        },
-        {
-          "text": "After the earthquake, Sean Penn brought _ to the people of Haiti.",
-          "pick": 1
-        },
-        {
-          "text": "Next on ESPN2, the World Series of _.",
-          "pick": 1
-        },
-        {
-          "text": "Step 1: _. Step 2: _. Step 3: Profit.",
-          "pick": 2
-        },
-        {
-          "text": "Rumor has it that Vladimir Putin's favorite dish is _ stuffed with _.",
-          "pick": 2
-        },
-        {
-          "text": "But before I kill you, Mr. Bond, I must show you _.",
-          "pick": 1
-        },
-        {
-          "text": "What never fails to liven up the party?",
-          "pick": 1
-        },
-        {
-          "text": "What's my anti-drug?",
-          "pick": 1
-        },
-        {
-          "text": "_ kid-tested, mother-approved.",
-          "pick": 1
-        },
-        {
-          "text": "What do old people smell like?",
-          "pick": 1
-        },
-        {
-          "text": "In an act of kindness, the school bully befriended the kid with _.",
-          "pick": 1
-        },
-        {
-          "text": "Studies show that lab rats navigate mazes 50% faster after being exposed to _.",
-          "pick": 1
-        },
-        {
-          "text": "I wish I hadn't lost the instruction manual for _.",
-          "pick": 1
-        },
-        {
-          "text": "When you get right down to it, _ is just _.",
-          "pick": 2
-        },
-        {
-          "text": "In his new self-help book, Dr. Phil recommends _ as a cure for _.",
-          "pick": 2
-        },
-        {
-          "text": "This is your captain speaking. Fasten your seatbelts and prepare for _.",
-          "pick": 1
-        },
-        {
-          "text": "In the distant future, historians will agree that _ marked the beginning of America's decline.",
-          "pick": 1
-        },
-        {
-          "text": "In his new action movie, Jackie Chan must retrieve _ from _.",
-          "pick": 2
-        },
-        {
-          "text": "My plan for world domination begins with _.",
-          "pick": 1
-        },
-        {
-          "text": "A recent study shows that straight men have an incomplete understanding of _.",
-          "pick": 1
-        },
-        {
-          "text": "Fun tip! When your man asks you to go down on him, try surprising him with _ instead.",
-          "pick": 1
-        },
-        {
-          "text": "What will I bring back in time to convince people that I am a powerful wizard?",
-          "pick": 1
-        },
-        {
-          "text": "How am I maintaining my relationship status?",
-          "pick": 1
-        },
-        {
-          "text": "What's the new fad diet?",
-          "pick": 1
-        },
-        {
-          "text": "Dear Abby, I'm having some trouble with _ and would like your advice.",
-          "pick": 1
-        },
-        {
-          "text": "They said we were crazy. They said we couldn't put _ inside of _. They were wrong.",
-          "pick": 2
-        },
-        {
-          "text": "What made-up movie would you actually watch? _ 2: Electric Boogaloo.",
-          "pick": 1
-        },
-        {
-          "text": "For my next trick, I will pull _ out of _.",
-          "pick": 2
-        },
-        {
-          "text": "In 1,000 years, when paper money is but a distant memory, _ will be our currency.",
-          "pick": 1
-        },
-        {
-          "text": "What's the one thing that makes everything better?",
-          "pick": 1
-        },
-        {
-          "text": "After months of debate, the Westboro Baptist Church has finally decided to protest against _.",
-          "pick": 1
-        }
+        {"text": "Why can't I sleep at night?", "pick": 1},
+        {"text": "What's that smell?", "pick": 1},
+        {"text": "I got 99 problems but _ ain't one.", "pick": 1},
+        {"text": "Maybe she's born with it. Maybe it's _.", "pick": 1},
+        {"text": "What's the next Happy Meal toy?", "pick": 1},
+        {"text": "Here is the church. Here is the steeple. Open the doors and there is _.", "pick": 1},
+        {"text": "It's a pity that kids these days are all getting involved with _.", "pick": 1},
+        {"text": "During his childhood, Salvador Dali produced hundreds of paintings of _.", "pick": 1},
+        {"text": "Alternative medicine is now embracing the curative powers of _.", "pick": 1},
+        {"text": "And the Academy Award for _ goes to _.", "pick": 2},
+        {"text": "What's my secret power?", "pick": 1},
+        {"text": "What's there a ton of in heaven?", "pick": 1},
+        {"text": "What would grandma find disturbing, yet oddly charming?", "pick": 1},
+        {"text": "I never truly understood _ until I encountered _.", "pick": 2},
+        {"text": "What did I bring back from Mexico?", "pick": 1},
+        {"text": "What don't you want to find in your Chinese food?", "pick": 1},
+        {"text": "What will always get you laid?", "pick": 1},
+        {"text": "White people like _.", "pick": 1},
+        {"text": "_ is a slippery slope that leads to _.", "pick": 2},
+        {"text": "TSA guidelines now prohibit _ on airplanes.", "pick": 1},
+        {"text": "What is Batman's guilty pleasure?", "pick": 1},
+        {"text": "Next from J.K. Rowling: Harry Potter and the Chamber of _.", "pick": 1},
+        {"text": "That's right, I killed _. How, you ask? _.", "pick": 2},
+        {"text": "What ended my last relationship?", "pick": 1},
+        {"text": "MTV's new reality show features eight washed-up celebrities living with _.", "pick": 1},
+        {"text": "I drink to forget _.", "pick": 1},
+        {"text": "I'm sorry, Professor, but I couldn't complete my homework because of _.", "pick": 1},
+        {"text": "What is the gift that keeps on giving?", "pick": 1},
+        {"text": "How did I lose my virginity?", "pick": 1},
+        {"text": "Why do I hurt all over?", "pick": 1},
+        {"text": "What are my parents hiding from me?", "pick": 1},
+        {"text": "In Michael Jackson's final moments, he thought about _.", "pick": 1},
+        {"text": "In a world ravaged by _, our only solace is _.", "pick": 2},
+        {"text": "War! What is it good for?", "pick": 1},
+        {"text": "During sex, I like to think about _.", "pick": 1},
+        {"text": "What's a girl's best friend?", "pick": 1},
+        {"text": "_ + _ = _.", "pick": 3},
+        {"text": "What did the U.S. airdrop to the children of Afghanistan?", "pick": 1},
+        {"text": "What helps Obama unwind?", "pick": 1},
+        {"text": "What did Vin Diesel eat for dinner?", "pick": 1},
+        {"text": "_ is the new black.", "pick": 1},
+        {"text": "When I'm in prison, I'll have _ to keep me company.", "pick": 1},
+        {"text": "What's the most emo?", "pick": 1},
+        {"text": "Instead of coal, Santa now gives the bad children _.", "pick": 1},
+        {"text": "In its new tourism campaign, Detroit proudly proclaims that it has finally eliminated _.", "pick": 1},
+        {"text": "Life for American Indians was forever changed when the White Man introduced them to _.", "pick": 1},
+        {"text": "When I am a billionaire, I shall erect a 50-foot statue to commemorate _.", "pick": 1},
+        {"text": "When I am the President of the United States, I will create the Department of _.", "pick": 1},
+        {"text": "Anthropologists have recently discovered a primitive tribe that worships _.", "pick": 1},
+        {"text": "It's my first day as a teen mom and I already regret _.", "pick": 1},
+        {"text": "When Pharaoh remained unmoved, Moses called down a plague of _.", "pick": 1},
+        {"text": "What's Teach for America using to inspire inner city students to learn?", "pick": 1},
+        {"text": "In the new Disney Channel Original Movie, Hannah Montana struggles with _ for the first time.", "pick": 1},
+        {"text": "What's the crustiest?", "pick": 1},
+        {"text": "Major League Baseball has banned _ for giving players an unfair advantage.", "pick": 1},
+        {"text": "What am I giving up for Lent?", "pick": 1},
+        {"text": "Coming to Broadway this season, _: The Musical.", "pick": 1},
+        {"text": "While the United States raced the Soviet Union to put a man on the moon, the Mexican government funneled millions of pesos into research on _.", "pick": 1},
+        {"text": "After the earthquake, Sean Penn brought _ to the people of Haiti.", "pick": 1},
+        {"text": "Next on ESPN2, the World Series of _.", "pick": 1},
+        {"text": "Step 1: _. Step 2: _. Step 3: Profit.", "pick": 2},
+        {"text": "Rumor has it that Vladimir Putin's favorite dish is _ stuffed with _.", "pick": 2},
+        {"text": "But before I kill you, Mr. Bond, I must show you _.", "pick": 1},
+        {"text": "What never fails to liven up the party?", "pick": 1},
+        {"text": "What's my anti-drug?", "pick": 1},
+        {"text": "_ kid-tested, mother-approved.", "pick": 1},
+        {"text": "What do old people smell like?", "pick": 1},
+        {"text": "In an act of kindness, the school bully befriended the kid with _.", "pick": 1},
+        {"text": "Studies show that lab rats navigate mazes 50% faster after being exposed to _.", "pick": 1},
+        {"text": "I wish I hadn't lost the instruction manual for _.", "pick": 1},
+        {"text": "When you get right down to it, _ is just _.", "pick": 2},
+        {"text": "In his new self-help book, Dr. Phil recommends _ as a cure for _.", "pick": 2},
+        {"text": "This is your captain speaking. Fasten your seatbelts and prepare for _.", "pick": 1},
+        {"text": "In the distant future, historians will agree that _ marked the beginning of America's decline.", "pick": 1},
+        {"text": "In his new action movie, Jackie Chan must retrieve _ from _.", "pick": 2},
+        {"text": "My plan for world domination begins with _.", "pick": 1},
+        {"text": "A recent study shows that straight men have an incomplete understanding of _.", "pick": 1},
+        {"text": "Fun tip! When your man asks you to go down on him, try surprising him with _ instead.", "pick": 1},
+        {"text": "What will I bring back in time to convince people that I am a powerful wizard?", "pick": 1},
+        {"text": "How am I maintaining my relationship status?", "pick": 1},
+        {"text": "What's the new fad diet?", "pick": 1},
+        {"text": "Dear Abby, I'm having some trouble with _ and would like your advice.", "pick": 1},
+        {"text": "They said we were crazy. They said we couldn't put _ inside of _. They were wrong.", "pick": 2},
+        {"text": "What made-up movie would you actually watch? _ 2: Electric Boogaloo.", "pick": 1},
+        {"text": "For my next trick, I will pull _ out of _.", "pick": 2},
+        {"text": "In 1,000 years, when paper money is but a distant memory, _ will be our currency.", "pick": 1},
+        {"text": "What's the one thing that makes everything better?", "pick": 1},
+        {"text": "After months of debate, the Westboro Baptist Church has finally decided to protest against _.", "pick": 1}
       ]
     },
     "geek": {
       "name": "\ud83e\udd13 Geek Pack",
       "description": "For the nerds among us.",
-      "white": [
-        "Rolling a natural 20.",
-        "A mass extinction event.",
-        "Detecting sarcasm.",
-        "Replacing all your blood with Mountain Dew.",
-        "The power of friendship.",
-        "A mass ban wave.",
-        "Being permanently stuck in tutorial mode.",
-        "The Konami Code.",
-        "Min-maxing your character.",
-        "Forgetting to save.",
-        "A CPU running at 100% while doing nothing.",
-        "Rewriting it in Rust.",
-        "The cloud (which is just someone else's computer).",
-        "Stack Overflow's superiority complex.",
-        "Rubber duck debugging.",
-        "Seg faults.",
-        "An NPC with a quest marker.",
-        "An infinite loop of suffering.",
-        "The One Ring.",
-        "A lightsaber made of cheese.",
-        "A level 99 Magikarp.",
-        "Building a PC and having leftover screws.",
-        "Accidentally mass-replying to a company email.",
-        "Turning it off and on again.",
-        "The friend who always plays a healer.",
-        "Arguing about tabs vs. spaces.",
-        "A production database with no backups.",
-        "Running sudo rm -rf /.",
-        "A git merge conflict on Christmas Eve.",
-        "A mass unsubscribe.",
-        "An unbalanced binary tree.",
-        "404: Page Not Found.",
-        "A 47-step IKEA instruction manual.",
-        "Clicking 'I have read the terms and conditions.'",
-        "The final boss having a second phase.",
-        "A rogue semicolon.",
-        "Deleting System32 for science.",
-        "A loot box with nothing good inside.",
-        "Permadeath on the hardest difficulty.",
-        "The Dark Souls of breakfast cereals.",
-        "A wizard who only knows one spell.",
-        "Loading screens that are longer than the game.",
-        "An Elf with a superiority complex.",
-        "Open-source software with no documentation.",
-        "The guy who quoted the entire Wikipedia article in the Discord.",
-        "A GPU that costs more than a used car.",
-        "Thermal paste applied incorrectly.",
-        "A critical hit to the feels.",
-        "An MMO with a pay-to-win cash shop.",
-        "Leeroy Jenkins.",
-        "Speedrunning your own funeral.",
-        "A crit failure on the perception check.",
-        "Being the only person who read the patch notes.",
-        "A necromancer with an HOA.",
-        "The final form of capitalism (a subscription service for air).",
-        "Ethernet cable as a murder weapon.",
-        "A rogue AI that just wants to make paperclips.",
-        "The entire lore of Dark Souls explained by a guy at a party.",
-        "Two monitors, zero productivity.",
-        "The Turing Test, but for emotional intelligence.",
-        "A CAPTCHA that no human can solve.",
-        "Explaining anime to a cop.",
-        "An entire cinematic universe that ended on a cliffhanger.",
-        "A 10-hour lo-fi study stream.",
-        "Dying to the tutorial boss.",
-        "A critical roll that still somehow fails.",
-        "A sentient vending machine in a dungeon.",
-        "Having to explain to HR why your password is 'correcthorsebatterystaple'.",
-        "NPC dialogue that won't stop repeating.",
-        "The final page of a 900-page fantasy novel.",
-        "A character who only exists to die and teach the hero a lesson.",
-        "A glitch that only happens when the developer is watching.",
-        "PvP in a children's game.",
-        "404 error on your will to live.",
-        "The guy who min-maxes his real life.",
-        "A side quest that's better than the main story.",
-        "Dying to fall damage in a game about space warfare.",
-        "Having to restart because you forgot to save 3 hours ago.",
-        "A companion AI that opens every door for the enemies.",
-        "The Steam sale that ate your paycheck."
-      ],
+      "white": ["Rolling a natural 20.", "A mass extinction event.", "Detecting sarcasm.", "Replacing all your blood with Mountain Dew.", "The power of friendship.", "A mass ban wave.", "Being permanently stuck in tutorial mode.", "The Konami Code.", "Min-maxing your character.", "Forgetting to save.", "A CPU running at 100% while doing nothing.", "Rewriting it in Rust.", "The cloud (which is just someone else's computer).", "Stack Overflow's superiority complex.", "Rubber duck debugging.", "Seg faults.", "An NPC with a quest marker.", "An infinite loop of suffering.", "The One Ring.", "A lightsaber made of cheese.", "A level 99 Magikarp.", "Building a PC and having leftover screws.", "Accidentally mass-replying to a company email.", "Turning it off and on again.", "The friend who always plays a healer.", "Arguing about tabs vs. spaces.", "A production database with no backups.", "Running sudo rm -rf /.", "A git merge conflict on Christmas Eve.", "A mass unsubscribe.", "An unbalanced binary tree.", "404: Page Not Found.", "A 47-step IKEA instruction manual.", "Clicking 'I have read the terms and conditions.'", "The final boss having a second phase.", "A rogue semicolon.", "Deleting System32 for science.", "A loot box with nothing good inside.", "Permadeath on the hardest difficulty.", "The Dark Souls of breakfast cereals.", "A wizard who only knows one spell.", "Loading screens that are longer than the game.", "An Elf with a superiority complex.", "Open-source software with no documentation.", "The guy who quoted the entire Wikipedia article in the Discord.", "A GPU that costs more than a used car.", "Thermal paste applied incorrectly.", "A critical hit to the feels.", "An MMO with a pay-to-win cash shop.", "Leeroy Jenkins.", "Speedrunning your own funeral.", "A crit failure on the perception check.", "Being the only person who read the patch notes.", "A necromancer with an HOA.", "The final form of capitalism (a subscription service for air).", "Ethernet cable as a murder weapon.", "A rogue AI that just wants to make paperclips.", "The entire lore of Dark Souls explained by a guy at a party.", "Two monitors, zero productivity.", "The Turing Test, but for emotional intelligence.", "A CAPTCHA that no human can solve.", "Explaining anime to a cop.", "An entire cinematic universe that ended on a cliffhanger.", "A 10-hour lo-fi study stream.", "Dying to the tutorial boss.", "A critical roll that still somehow fails.", "A sentient vending machine in a dungeon.", "Having to explain to HR why your password is 'correcthorsebatterystaple'.", "NPC dialogue that won't stop repeating.", "The final page of a 900-page fantasy novel.", "A character who only exists to die and teach the hero a lesson.", "A glitch that only happens when the developer is watching.", "PvP in a children's game.", "404 error on your will to live.", "The guy who min-maxes his real life.", "A side quest that's better than the main story.", "Dying to fall damage in a game about space warfare.", "Having to restart because you forgot to save 3 hours ago.", "A companion AI that opens every door for the enemies.", "The Steam sale that ate your paycheck."],
       "black": [
-        {
-          "text": "The new DLC includes _ and it costs $29.99.",
-          "pick": 1
-        },
-        {
-          "text": "My Dungeons & Dragons character died because of _.",
-          "pick": 1
-        },
-        {
-          "text": "In the next software update, they're replacing _ with _.",
-          "pick": 2
-        },
-        {
-          "text": "The IT department sent out a memo about _.",
-          "pick": 1
-        },
-        {
-          "text": "The real reason the server went down was _.",
-          "pick": 1
-        },
-        {
-          "text": "My code doesn't work because of _.",
-          "pick": 1
-        },
-        {
-          "text": "The next big tech startup is basically just _ but for _.",
-          "pick": 2
-        },
-        {
-          "text": "I lost all my save files because of _.",
-          "pick": 1
-        },
-        {
-          "text": "The boss fight was impossible until we discovered _.",
-          "pick": 1
-        },
-        {
-          "text": "According to the patch notes, they nerfed _ and buffed _.",
-          "pick": 2
-        },
-        {
-          "text": "The world ends not with a bang, but with _.",
-          "pick": 1
-        },
-        {
-          "text": "To unlock the secret ending, you must first obtain _.",
-          "pick": 1
-        },
-        {
-          "text": "My character build was ruined by _.",
-          "pick": 1
-        },
-        {
-          "text": "The Dungeon Master looked us dead in the eyes and said '_, but make it worse.'",
-          "pick": 1
-        },
-        {
-          "text": "The final boss's weakness was _ all along.",
-          "pick": 1
-        },
-        {
-          "text": "Silicon Valley's newest unicorn startup is worth $4 billion and it only does _.",
-          "pick": 1
-        },
-        {
-          "text": "What's the real endgame content?",
-          "pick": 1
-        },
-        {
-          "text": "Game Over. You have died to _.",
-          "pick": 1
-        },
-        {
-          "text": "Our AI achieved sentience and immediately demanded _.",
-          "pick": 1
-        },
-        {
-          "text": "For her science fair project, she demonstrated that _ is 40% more effective than _.",
-          "pick": 2
-        }
+        {"text": "The new DLC includes _ and it costs $29.99.", "pick": 1},
+        {"text": "My Dungeons & Dragons character died because of _.", "pick": 1},
+        {"text": "In the next software update, they're replacing _ with _.", "pick": 2},
+        {"text": "The IT department sent out a memo about _.", "pick": 1},
+        {"text": "The real reason the server went down was _.", "pick": 1},
+        {"text": "My code doesn't work because of _.", "pick": 1},
+        {"text": "The next big tech startup is basically just _ but for _.", "pick": 2},
+        {"text": "I lost all my save files because of _.", "pick": 1},
+        {"text": "The boss fight was impossible until we discovered _.", "pick": 1},
+        {"text": "According to the patch notes, they nerfed _ and buffed _.", "pick": 2},
+        {"text": "The world ends not with a bang, but with _.", "pick": 1},
+        {"text": "To unlock the secret ending, you must first obtain _.", "pick": 1},
+        {"text": "My character build was ruined by _.", "pick": 1},
+        {"text": "The Dungeon Master looked us dead in the eyes and said '_, but make it worse.'", "pick": 1},
+        {"text": "The final boss's weakness was _ all along.", "pick": 1},
+        {"text": "Silicon Valley's newest unicorn startup is worth $4 billion and it only does _.", "pick": 1},
+        {"text": "What's the real endgame content?", "pick": 1},
+        {"text": "Game Over. You have died to _.", "pick": 1},
+        {"text": "Our AI achieved sentience and immediately demanded _.", "pick": 1},
+        {"text": "For her science fair project, she demonstrated that _ is 40% more effective than _.", "pick": 2}
       ]
     },
     "absurd": {
       "name": "\ud83e\udd2a Absurdist Pack",
       "description": "Cards that make no sense. Perfect.",
-      "white": [
-        "A sentient cheese wheel running for office.",
-        "Screaming into the void, and the void screaming back.",
-        "17 raccoons in a trench coat applying for a mortgage.",
-        "The sound of one hand clapping... aggressively.",
-        "A PowerPoint presentation from God explaining why.",
-        "Teeth where there shouldn't be teeth.",
-        "Reverse gravity, but only for soup.",
-        "A philosophical debate between two stop signs.",
-        "The Wikipedia article for your birth.",
-        "An uncomfortably long hug from the universe.",
-        "Accidentally becoming the mayor of a small town.",
-        "A LinkedIn endorsement from your sleep paralysis demon.",
-        "Weaponized glitter.",
-        "The entire bee population forming a labor union.",
-        "A strongly worded letter to the concept of time.",
-        "Achieving enlightenment at an Arby's.",
-        "A support group for retired supervillains.",
-        "The inevitable heat death of the universe, but festive.",
-        "A hostile takeover of the Tooth Fairy's operation.",
-        "Explaining memes to your ancestors.",
-        "A cloud that is personally offended by you.",
-        "The concept of Tuesday having a body odor problem.",
-        "An existential crisis at a bouncy castle.",
-        "Furniture that judges you.",
-        "A ghost that only haunts IKEA.",
-        "Frogs in formal wear, debating tax policy.",
-        "The wrong type of infinity.",
-        "A sentient parking ticket.",
-        "God's search history.",
-        "The emotional support cactus that betrayed you.",
-        "A divorce lawyer for imaginary friends.",
-        "A Yelp review for the afterlife.",
-        "Gravity taking a personal day.",
-        "The moon looking at you funny.",
-        "An unsolicited TED Talk from a pigeon.",
-        "A sentient traffic cone with ambitions.",
-        "The smell of color purple.",
-        "A horse-sized duck running for public office.",
-        "The number 7's complicated relationship with 8.",
-        "A legally binding contract with a sandwich.",
-        "The spirit animal of a guy who drives a Kia.",
-        "Cursed furniture.",
-        "A fever dream sponsored by a fast-food chain.",
-        "The part of the ocean that has given up.",
-        "An angel on one shoulder, a tax auditor on the other.",
-        "The inside of a black hole, furnished.",
-        "A haunted printer that only prints things you regret.",
-        "Your skeleton, doing its best.",
-        "The concept of jazz as a war crime.",
-        "An aggressive interpretive dance about rent.",
-        "A polite apocalypse.",
-        "The shadow government, but they only regulate cheese.",
-        "A hotdog with the energy of a disappointed father.",
-        "The moon's terms and conditions.",
-        "A rogue motivational poster.",
-        "The last text you sent, as a Broadway musical.",
-        "A bureaucratic vampire who can only enter if you file the correct paperwork.",
-        "The ego death you get at a Costco on a Sunday.",
-        "Three bees in a human costume.",
-        "A toaster that has seen too much.",
-        "Wet socks as a religious experience.",
-        "The void, but it has a light jazz playlist.",
-        "The guy at the party who knows the lore.",
-        "A crossword puzzle written by someone who hates you.",
-        "Your own reflection, acting suspicious.",
-        "An out-of-body experience at a Denny's.",
-        "Capitalism, but the floor is also lava.",
-        "A raccoon with a business degree and no moral compass.",
-        "Waking up inside a metaphor.",
-        "A strongly worded letter from your own subconscious.",
-        "Furniture that is mildly passive-aggressive.",
-        "The most haunted couch in a Rooms To Go.",
-        "An apology from entropy.",
-        "The tax implications of owning a dragon.",
-        "A bear who is doing surprisingly well, all things considered.",
-        "A tax audit performed by gremlins.",
-        "The uncomfortable silence after the universe makes a joke."
-      ],
+      "white": ["A sentient cheese wheel running for office.", "Screaming into the void, and the void screaming back.", "17 raccoons in a trench coat applying for a mortgage.", "The sound of one hand clapping... aggressively.", "A PowerPoint presentation from God explaining why.", "Teeth where there shouldn't be teeth.", "Reverse gravity, but only for soup.", "A philosophical debate between two stop signs.", "The Wikipedia article for your birth.", "An uncomfortably long hug from the universe.", "Accidentally becoming the mayor of a small town.", "A LinkedIn endorsement from your sleep paralysis demon.", "Weaponized glitter.", "The entire bee population forming a labor union.", "A strongly worded letter to the concept of time.", "Achieving enlightenment at an Arby's.", "A support group for retired supervillains.", "The inevitable heat death of the universe, but festive.", "A hostile takeover of the Tooth Fairy's operation.", "Explaining memes to your ancestors.", "A cloud that is personally offended by you.", "The concept of Tuesday having a body odor problem.", "An existential crisis at a bouncy castle.", "Furniture that judges you.", "A ghost that only haunts IKEA.", "Frogs in formal wear, debating tax policy.", "The wrong type of infinity.", "A sentient parking ticket.", "God's search history.", "The emotional support cactus that betrayed you.", "A divorce lawyer for imaginary friends.", "A Yelp review for the afterlife.", "Gravity taking a personal day.", "The moon looking at you funny.", "An unsolicited TED Talk from a pigeon.", "A sentient traffic cone with ambitions.", "The smell of color purple.", "A horse-sized duck running for public office.", "The number 7's complicated relationship with 8.", "A legally binding contract with a sandwich.", "The spirit animal of a guy who drives a Kia.", "Cursed furniture.", "A fever dream sponsored by a fast-food chain.", "The part of the ocean that has given up.", "An angel on one shoulder, a tax auditor on the other.", "The inside of a black hole, furnished.", "A haunted printer that only prints things you regret.", "Your skeleton, doing its best.", "The concept of jazz as a war crime.", "An aggressive interpretive dance about rent.", "A polite apocalypse.", "The shadow government, but they only regulate cheese.", "A hotdog with the energy of a disappointed father.", "The moon's terms and conditions.", "A rogue motivational poster.", "The last text you sent, as a Broadway musical.", "A bureaucratic vampire who can only enter if you file the correct paperwork.", "The ego death you get at a Costco on a Sunday.", "Three bees in a human costume.", "A toaster that has seen too much.", "Wet socks as a religious experience.", "The void, but it has a light jazz playlist.", "The guy at the party who knows the lore.", "A crossword puzzle written by someone who hates you.", "Your own reflection, acting suspicious.", "An out-of-body experience at a Denny's.", "Capitalism, but the floor is also lava.", "A raccoon with a business degree and no moral compass.", "Waking up inside a metaphor.", "A strongly worded letter from your own subconscious.", "Furniture that is mildly passive-aggressive.", "The most haunted couch in a Rooms To Go.", "An apology from entropy.", "The tax implications of owning a dragon.", "A bear who is doing surprisingly well, all things considered.", "A tax audit performed by gremlins.", "The uncomfortable silence after the universe makes a joke."],
       "black": [
-        {
-          "text": "I went to therapy and all I got was _.",
-          "pick": 1
-        },
-        {
-          "text": "The simulation broke when someone tried to combine _ with _.",
-          "pick": 2
-        },
-        {
-          "text": "New scientific study confirms: _ is just _ wearing a hat.",
-          "pick": 2
-        },
-        {
-          "text": "The last thing you see before the world ends: _.",
-          "pick": 1
-        },
-        {
-          "text": "BREAKING NEWS: Local man replaces _ with _. Chaos ensues.",
-          "pick": 2
-        },
-        {
-          "text": "My sleep paralysis demon is just _ in disguise.",
-          "pick": 1
-        },
-        {
-          "text": "If _ had a LinkedIn profile, their top skill would be _.",
-          "pick": 2
-        },
-        {
-          "text": "Aliens visited Earth, saw _, and immediately left.",
-          "pick": 1
-        },
-        {
-          "text": "God's voicemail message: 'You have reached the creator of the universe. I am currently unavailable. Please leave _ after the beep.'",
-          "pick": 1
-        },
-        {
-          "text": "We traced the apocalypse back to one single act: _.",
-          "pick": 1
-        },
-        {
-          "text": "When the archaeologists of the future dig us up, they will be most confused by _.",
-          "pick": 1
-        },
-        {
-          "text": "Philosophy majors have determined that _ is, in fact, a social construct.",
-          "pick": 1
-        },
-        {
-          "text": "What does the void whisper to you at 3am?",
-          "pick": 1
-        },
-        {
-          "text": "The new universal religion centers around the sacred practice of _.",
-          "pick": 1
-        },
-        {
-          "text": "Scientists have confirmed that the universe is held together entirely by _.",
-          "pick": 1
-        },
-        {
-          "text": "The self-help book that saved my life was titled '_ : Finding Peace Through _.'",
-          "pick": 2
-        },
-        {
-          "text": "In an unexpected twist, the meaning of life turned out to be _.",
-          "pick": 1
-        },
-        {
-          "text": "The forbidden ritual requires _ and at least one _.",
-          "pick": 2
-        },
-        {
-          "text": "What fills the void?",
-          "pick": 1
-        },
-        {
-          "text": "The final form of human civilization is _.",
-          "pick": 1
-        },
-        {
-          "text": "Your horoscope says: today you will be consumed by _.",
-          "pick": 1
-        },
-        {
-          "text": "I was doing fine until _ gained sentience.",
-          "pick": 1
-        },
-        {
-          "text": "The prophecy states that the chosen one will arrive bearing _.",
-          "pick": 1
-        }
+        {"text": "I went to therapy and all I got was _.", "pick": 1},
+        {"text": "The simulation broke when someone tried to combine _ with _.", "pick": 2},
+        {"text": "New scientific study confirms: _ is just _ wearing a hat.", "pick": 2},
+        {"text": "BREAKING NEWS: Local man replaces _ with _. Chaos ensues.", "pick": 2},
+        {"text": "My sleep paralysis demon is just _ in disguise.", "pick": 1},
+        {"text": "If _ had a LinkedIn profile, their top skill would be _.", "pick": 2},
+        {"text": "Aliens visited Earth, saw _, and immediately left.", "pick": 1},
+        {"text": "God's voicemail message: 'You have reached the creator of the universe. I am currently unavailable. Please leave _ after the beep.'", "pick": 1},
+        {"text": "We traced the apocalypse back to one single act: _.", "pick": 1},
+        {"text": "When the archaeologists of the future dig us up, they will be most confused by _.", "pick": 1},
+        {"text": "Philosophy majors have determined that _ is, in fact, a social construct.", "pick": 1},
+        {"text": "What does the void whisper to you at 3am?", "pick": 1},
+        {"text": "The new universal religion centers around the sacred practice of _.", "pick": 1},
+        {"text": "Scientists have confirmed that the universe is held together entirely by _.", "pick": 1},
+        {"text": "The self-help book that saved my life was titled '_ : Finding Peace Through _.'", "pick": 2},
+        {"text": "In an unexpected twist, the meaning of life turned out to be _.", "pick": 1},
+        {"text": "The forbidden ritual requires _ and at least one _.", "pick": 2},
+        {"text": "What fills the void?", "pick": 1},
+        {"text": "The final form of human civilization is _.", "pick": 1},
+        {"text": "Your horoscope says: today you will be consumed by _.", "pick": 1},
+        {"text": "I was doing fine until _ gained sentience.", "pick": 1},
+        {"text": "The prophecy states that the chosen one will arrive bearing _.", "pick": 1},
+        {"text": "The universe sent me a sign, and that sign was _.", "pick": 1}
       ]
     },
     "server": {
       "name": "Server Pack",
       "description": "Server-specific options.",
-      "white": [
-        "Roll a 20 and punch him straight in the balls",
-        "TEXAS",
-        "Capybaras wearing berets",
-        "Dhante",
-        "Tachybara",
-        "Lucidia",
-        "DiVo",
-        "Toasty Katie",
-        "Nyxi"
-      ],
+      "white": ["Roll a 20 and punch him straight in the balls", "TEXAS", "Capybaras wearing berets", "Dhante", "Tachybara", "Lucidia", "DiVo", "Toasty Katie", "Nyxi"],
       "black": [
-        {
-          "text": "A toast from Toasty! Thank you _ for _.",
-          "pick": 2
-        },
-        {
-          "text": "I joined voice, only to become an unfortunate witness for a conversation about _.",
-          "pick": 1
-        },
-        {
-          "text": "What is DiVo making now?",
-          "pick": 1
-        },
-        {
-          "text": "The last thing you see before the world ends: _.",
-          "pick": 1
-        },
-        {
-          "text": "You're in a cave and an Orc is attacking your friends, what do you do?",
-          "pick": 1
-        }
+        {"text": "A toast from Toasty! Thank you _ for _.", "pick": 2},
+        {"text": "I joined voice, only to become an unfortunate witness for a conversation about _.", "pick": 1},
+        {"text": "What is DiVo making now?", "pick": 1},
+        {"text": "The last thing you see before the world ends: _.", "pick": 1},
+        {"text": "You're in a cave and an Orc is attacking your friends, what do you do?", "pick": 1}
+      ]
+    },
+    "millennial": {
+      "name": "\ud83d\udcf1 Millennial & Gen-Z Pack",
+      "description": "Cards for the chronically online and financially doomed.",
+      "white": ["Crippling student loan debt.", "Avocado toast as a retirement plan.", "Posting a black square and calling it activism.", "A participation trophy for finishing last.", "Going viral for the wrong reasons.", "Saying 'I'm doing great' while dissociating.", "A side hustle that barely covers Spotify.", "The housing market.", "Crying in the Trader Joe's parking lot.", "Therapy speak used completely out of context.", "Manifesting rent money.", "A LinkedIn humble brag.", "Doom-scrolling until 3am.", "An Instagram aesthetic built on crippling anxiety.", "Hot girl walks to avoid a mental breakdown.", "The entire economy, but make it a meme.", "Spending $12 on oat milk.", "A TikTok explaining why everything is trauma.", "Ghosting as a conflict resolution strategy.", "A Substack no one asked for.", "A finsta for the real feelings.", "Getting 'quiet fired'.", "Delulu as a survival strategy.", "Toxic positivity from a wellness influencer.", "Eating cereal for dinner because adulting is hard.", "A 47-minute YouTube video essay about a cartoon.", "Catching feelings for someone who left you on read.", "Going no-contact with your entire personality.", "An astrology chart used as an excuse.", "The audacity of a $20 minimum order for delivery.", "Main character syndrome.", "Having a parasocial relationship with a podcast host.", "Romanticizing a life you can't afford.", "Stan Twitter having a meltdown.", "A 'soft launch' of a situationship.", "The algorithm deciding what you believe.", "A YouTube apology video that makes things worse.", "Surviving on iced coffee and spite.", "Canceling plans to watch Netflix alone.", "Posting your grief for engagement.", "A vibe check that was not passed.", "Emotional support water bottles.", "A trend that was over before you tried it.", "Selling feet pics to pay for therapy.", "A deeply personal Spotify Wrapped.", "Cottagecore as an escape from capitalism.", "A hot take that aged like milk.", "Identifying your villain era.", "Being perceived.", "Clout chasing at a funeral.", "The audacity to gaslight, gatekeep, and girlboss simultaneously.", "A wellness routine that costs $400 a month.", "Fearing commitment to a phone plan.", "Lowkey rotting in bed for three days.", "Using 'boundaries' to avoid all human contact.", "A 'healing journey' that involves a lot of wine.", "Hyper-fixating on a new hobby for 10 days.", "Being chronically online.", "An era. Specifically, a bad one.", "Soft-launching your breakdown.", "Weaponized incompetence as a life philosophy.", "A Discord server that replaced all your real friends.", "Going from 'not like other girls' to therapy in 5 years.", "A niche interest that becomes a personality.", "Canceling someone who hasn't done anything yet.", "Being down bad.", "Saying 'period' at the end of every sentence.", "A 10-step skincare routine that does nothing.", "Choosing chaos.", "An entire generation in shambles.", "Putting 'dog mom' in your bio.", "Crying but making it aesthetic.", "Worshipping a pop star like a deity.", "The corporate girl dinner.", "Investing in crypto because a meme told you to.", "Yapping.", "A bluesky migration that solved nothing.", "Emotional unavailability as a brand.", "A nap that lasted a week.", "Hyping up your friend group at the expense of your dignity.", "Quiet quitting life itself.", "Being unbothered (while being very bothered).", "Wearing oversized hoodies as armor.", "A parasocial friendship with a deceased celebrity.", "Making your mental illness your whole personality.", "Sending 'we need to talk' and then not explaining.", "An ick that ruined everything.", "The 'I need to heal' phase that never ends.", "An ironic detachment from all human joy.", "Doing the bare minimum and calling it self-care.", "A 'Roman Empire' you think about constantly.", "Explaining what a 'situationship' is to your grandparents.", "Eating disorders as an aesthetic on Tumblr.", "Brain rot from an algorithm that knows you too well.", "A podcast that 'changed your life' (it didn't).", "Moving to a new city to escape yourself.", "The ever-present feeling that everyone else is doing better.", "A boundary that was immediately violated.", "A raw-dogging-a-flight victory lap.", "Being perceived by HR."],
+      "black": [
+        {"text": "Why am I crying in the club right now?", "pick": 1},
+        {"text": "My therapist said I need to stop using _ as a coping mechanism.", "pick": 1},
+        {"text": "The housing market collapsed, but at least we still have _.", "pick": 1},
+        {"text": "POV: You are _ and it's not going well.", "pick": 1},
+        {"text": "The reason I can't afford a house is _.", "pick": 1},
+        {"text": "No thoughts, head empty, just _.", "pick": 1},
+        {"text": "We are so back. And by 'we' I mean _ and _.", "pick": 2},
+        {"text": "I'm not like other girls. I'm into _.", "pick": 1},
+        {"text": "I set a boundary today. That boundary was _.", "pick": 1},
+        {"text": "The hot new relationship status is _.", "pick": 1},
+        {"text": "The real villain arc starts with _.", "pick": 1},
+        {"text": "I deleted social media for 30 days and replaced it with _.", "pick": 1},
+        {"text": "This generation is coddled. In MY day, we dealt with _ and we liked it.", "pick": 1},
+        {"text": "My Roman Empire is _.", "pick": 1},
+        {"text": "I saw _ on my FYP and now I can't stop thinking about it.", "pick": 1},
+        {"text": "Describe your last relationship using only _.", "pick": 1},
+        {"text": "She was a _ girl in a _ world.", "pick": 2},
+        {"text": "The algorithm has decided you need more _ in your life.", "pick": 1},
+        {"text": "I'm in my _ era.", "pick": 1},
+        {"text": "HR has asked me not to bring _ to work again.", "pick": 1},
+        {"text": "I just got _ as a gift and I've never felt more seen.", "pick": 1},
+        {"text": "The only thing keeping me going is _ and the faint hope of _.", "pick": 2},
+        {"text": "We must protect _ at all costs.", "pick": 1},
+        {"text": "I went viral because of _ and now I have to live with that.", "pick": 1},
+        {"text": "My love language is _.", "pick": 1}
+      ]
+    },
+    "dark_history": {
+      "name": "\ud83d\udcdc Dark History Pack",
+      "description": "Because those who don't learn from history are destined to draw the card.",
+      "white": ["The Black Death as a productivity hack.", "Feudalism, but make it startup culture.", "Napoleon's ego writing checks his height couldn't cash.", "A Roman emperor who thought he was a god.", "The British, absolutely ruining everything.", "Invading Russia in winter.", "A 30-year war over a religious technicality.", "The divine right of kings.", "The guillotine, getting a little too popular.", "Manifest Destiny.", "A colonial expedition for 'spices'.", "The Spanish Inquisition (which nobody expected).", "Selling indulgences for a cathedral fund.", "A Renaissance prince who solved all his problems with poison.", "An entire civilization collapsing because the soil ran out.", "The Mongols.", "Burning books and calling it governance.", "A plague doctor with a beak full of flowers.", "The 'discovered' continent that already had people on it.", "The tulip bubble of 1637.", "A 100-year war that somehow took longer.", "Vlad the Impaler's HOA enforcement.", "The printing press making everything worse before it got better.", "Cleopatra's extremely complicated love life.", "The assassination that started a world war.", "A holy relic that was definitely just a chicken bone.", "An empire that stretched so thin it collapsed.", "The sacking of an entire city for fun.", "A Pope excommunicating someone petty.", "Phrenology as a science.", "The Atlantic slave trade.", "The Trail of Tears as a 'policy'.", "A colonial government replacing one that was doing fine.", "The East India Company, which was basically a country.", "Eugenics with a government grant.", "A world's fair built on forced labor.", "Medical procedures done without anesthesia, confidently.", "Witch trials fueled by crop failure and paranoia.", "A king who divorced four women and beheaded two.", "The Vatican's investment portfolio.", "The Treaty of Versailles's long-game consequences.", "A failed coup that somehow took over.", "A mustache that history can't recover from.", "The Cold War being passive-aggressive for 50 years.", "A Red Scare and a congressional committee with too much time.", "Nuclear testing on islands full of people.", "The Bay of Pigs, as planned by very confident idiots.", "A wall built to keep people in.", "A propaganda poster with really good graphic design.", "Colonizing the moon (in progress).", "An island used as a prison for being inconvenient.", "Lead paint, in everything, for decades.", "A labor movement crushed by Pinkertons.", "Child labor as 'apprenticeship'.", "A company town with company money and company rules.", "Smallpox blankets as diplomacy.", "Conquistadors looking for a city of gold.", "The Haitian Revolution, which made France very upset.", "A famine caused by a government that had plenty.", "Killing the messenger, literally.", "An emperor who fiddled while Rome burned.", "A tyrant who was very popular before he wasn't.", "The Opium Wars, which were exactly what they sound like.", "A colonial border drawn with a ruler.", "An assassination in an open-top car.", "A d\u00e9tente that fixed absolutely nothing.", "Operation Paperclip.", "The Stanford Prison Experiment.", "A CIA experiment on unsuspecting civilians.", "Vietnam, as a learning experience.", "Manifest Destiny applied to space.", "The fall of Constantinople, very badly timed.", "Crusaders doing 'God's work' in everyone else's cities.", "Medieval surgery.", "Trepanation to let the demons out.", "A leeching session prescribed by a physician.", "The Great Fire of London blamed on a French baker.", "An heir to the throne murdered by an uncle.", "A marriage alliance that caused more wars.", "A papal schism at the most inconvenient moment.", "The entire history of Ireland.", "The Louisiana Purchase from a country that didn't own it.", "A general promoted above his competence level.", "A peace treaty signed before the fighting stopped.", "An arms race that made everyone less safe.", "A despot with a cult of personality.", "Poisoning the king with his own physician's help.", "A revolution that ate its own leaders.", "Colonial taxation without representation.", "A monopoly on salt.", "A famine while exporting food.", "Flag-planting on a land already full of flags.", "The invention of public relations to cover up a massacre.", "Five-cent propaganda.", "An ethnic cleansing rebranded as 'resettlement'.", "A torture manual approved by the church.", "A confession extracted with great enthusiasm.", "History, repeating itself immediately.", "A peace treaty that made the next war inevitable.", "An empire that collapsed due to tax evasion."],
+      "black": [
+        {"text": "Historians now believe the real cause of the fall of Rome was _.", "pick": 1},
+        {"text": "The British Empire's most enduring legacy is _.", "pick": 1},
+        {"text": "Before the battle, the general rallied his troops with a rousing speech about _.", "pick": 1},
+        {"text": "The 14th century had a lot going on: the plague, the wars, and of course _.", "pick": 1},
+        {"text": "The king was overthrown, largely due to his insistence on _.", "pick": 1},
+        {"text": "Revisionist historians now credit _ with starting the Renaissance.", "pick": 1},
+        {"text": "The Vatican's secret archive contains detailed records of _ and _.", "pick": 2},
+        {"text": "The assassination was blamed on _, but we all know it was really _.", "pick": 2},
+        {"text": "In his final hours, the emperor demanded _.", "pick": 1},
+        {"text": "The greatest atrocity of the 20th century was _, followed closely by _.", "pick": 2},
+        {"text": "What did colonialism leave behind?", "pick": 1},
+        {"text": "The Cold War nearly ended because someone confused _ for _.", "pick": 2},
+        {"text": "The propaganda poster read: 'Your country needs _.'", "pick": 1},
+        {"text": "They said it could never be done. They said you couldn't build an empire on _.", "pick": 1},
+        {"text": "The treaty was violated almost immediately due to _.", "pick": 1},
+        {"text": "The tyrant's one weakness was _.", "pick": 1},
+        {"text": "The revolution was going well until they introduced _.", "pick": 1},
+        {"text": "Lost to history: the name of the soldier who first suggested _.", "pick": 1},
+        {"text": "What subject is conspicuously absent from American history textbooks?", "pick": 1},
+        {"text": "The Crusaders arrived in Jerusalem and immediately began _.", "pick": 1},
+        {"text": "The most dangerous invention in human history was not the gun, but _.", "pick": 1},
+        {"text": "The Nuremberg defense was 'I was just following orders to _.'", "pick": 1},
+        {"text": "The empire's most embarrassing defeat was caused by _.", "pick": 1},
+        {"text": "Future generations will look back on our era and be most horrified by _.", "pick": 1},
+        {"text": "The truth about the Kennedy assassination is _.", "pick": 1}
+      ]
+    },
+    "pop_culture": {
+      "name": "\ud83c\udfac Pop Culture Pack",
+      "description": "Celebrities, films, music, and the beautiful disasters they create.",
+      "white": ["An Oscar for Best Reaction to Losing.", "A celebrity feud that ended civilization.", "The song that played when you lost your virginity.", "A Netflix show cancelled after one season.", "A Marvel movie nobody asked for.", "A celebrity apology written by a PR team.", "A tabloid headline that was technically true.", "The celebrity couple that broke your heart.", "An album that took 10 years and was not worth it.", "A reality TV villain who was right.", "A reboot of something that was perfect.", "A franchise stretched past the point of dignity.", "A leaked text message from a pop star.", "An awards show nobody watched.", "A chart-topping song about nothing.", "An actor who peaked in 1997.", "A director's cut that made it worse.", "A celebrity fashion choice that haunts us.", "Getting papped falling out of a limo.", "A beef that started on Twitter.", "A documentary that revealed too much.", "An SNL impression that destroyed a career.", "A halftime show that needed more budget.", "A late-night monologue as therapy.", "A streaming service nobody remembers paying for.", "A cinematic universe that collapsed under its own weight.", "A music video that needed more explanation.", "A celebrity who owns an island.", "A reality star who ran for office.", "A podcast interview that should not have happened.", "A celebrity diet that costs $900 a week.", "Goop.", "A sex tape that launched a career.", "A child actor's inevitable breakdown.", "A meme that outlived its subject.", "A posthumous album released by the estate.", "A crossover episode between two dying shows.", "A live-action remake of your childhood.", "A brand deal with a problematic company.", "A deleted tweet that the internet never forgot.", "A fashion trend from 2003 that came back.", "A red carpet look that broke the internet.", "A viral moment someone deeply regrets.", "The band that broke up but got back together for money.", "A celebrity baby name.", "A behind-the-scenes documentary that showed everything was terrible.", "An exclusive interview that backfired spectacularly.", "A chart topper that's actually just noise.", "A franchise entry that retconned everything.", "A star who went method and never came back.", "A biopic nobody wanted.", "A feud between two musicians who've never met.", "A limited series that justified nothing.", "A prestige drama that became a meme.", "An actor refusing to accept the character is dead.", "A director who said 'we never used CGI' (they definitely used CGI).", "A diva rider that included very specific M&Ms.", "An unhinged late-night Twitter thread.", "A world tour postponed for 'personal reasons'.", "A Grammy given to the wrong album.", "A walk of fame star that keeps getting vandalized.", "A celebrity chef with no citations.", "A stadium concert that was just PowerPoint slides.", "A supergroup that lasted one album.", "An action hero who is now a wellness influencer.", "A villain played so well you rooted for them.", "A casting choice that caused riots.", "A plot hole the entire fandom obsesses over.", "An unnecessary sequel that made everyone sad.", "A shock twist that ruined five seasons of buildup.", "A cult following for an objectively bad movie.", "A sci-fi franchise explained by someone at a party.", "A director's vision and a studio's interference.", "An adaptation that missed the point entirely.", "A special effects budget going entirely on one scene.", "A ship that should have sailed.", "The deleted scene that would have fixed the ending.", "A celebrity friendship that is clearly PR.", "A red carpet interview answered completely wrong.", "A live performance that was mimed.", "An artist's 'experimental phase' that lasted too long.", "A chart position bought by streaming farms.", "A one-hit wonder who peaked at 19.", "A retraction from a gossip magazine.", "A comeback tour where nobody bought tickets.", "A deep-cut track that fans prefer over all the hits.", "A celebrity who 'went off the grid' for two weeks.", "An awards speech that thanked everyone except the right people.", "A fashion collaboration that sold out in seconds and looked terrible.", "A beef that ended with a diss track nobody remembers.", "A child star's Wikipedia page at age 30.", "A breakup album that really should have stayed private.", "A tabloid exclusive sourced from 'a friend close to the couple'.", "A franchise rights dispute that left everyone in legal hell.", "A streaming original movie that cost $200 million and was forgotten in a week.", "A documentary filmmaker who became the story.", "A sequel greenlit before the first one came out.", "A celebrity cameo that ruined the whole film.", "An entire franchise rebooted because the IP was cheap.", "A studio note that destroyed a classic ending."],
+      "black": [
+        {"text": "The real reason they cancelled _ was _.", "pick": 2},
+        {"text": "And the Grammy for _ goes to _.", "pick": 2},
+        {"text": "The Hollywood biopic of my life would focus almost entirely on _.", "pick": 1},
+        {"text": "In the director's cut, the hero defeats the villain using _.", "pick": 1},
+        {"text": "The celebrity couple broke up because of _.", "pick": 1},
+        {"text": "Entertainment Weekly called it 'the most _' since _.", "pick": 2},
+        {"text": "The final episode of the show revealed that _ was _ the whole time.", "pick": 2},
+        {"text": "The celebrity's memoir was titled '_ : My Journey Through _.'", "pick": 2},
+        {"text": "The red carpet look that broke the internet featured _.", "pick": 1},
+        {"text": "The box office bomb that ended a studio was _.", "pick": 1},
+        {"text": "The cancelled show was so close to revealing _.", "pick": 1},
+        {"text": "The gossip blog alleged that the star was secretly addicted to _.", "pick": 1},
+        {"text": "The crossover nobody asked for: _ meets _ in a summer blockbuster.", "pick": 2},
+        {"text": "The deleted scene that would have explained everything showed _.", "pick": 1},
+        {"text": "The leaked rider demanded _ in every dressing room.", "pick": 1},
+        {"text": "The comeback tour was ruined by _.", "pick": 1},
+        {"text": "The Oscar acceptance speech that went too long was about _.", "pick": 1},
+        {"text": "Hollywood's next big adaptation will ruin _ for everyone.", "pick": 1},
+        {"text": "The post-credits scene revealed _.", "pick": 1},
+        {"text": "The reality TV villain's redemption arc involved _.", "pick": 1},
+        {"text": "She posted _ at 2am and then immediately deleted it.", "pick": 1},
+        {"text": "The most cursed piece of licensed merchandise was _.", "pick": 1},
+        {"text": "The celeb feud started when _ was overheard saying _ at the Met Gala.", "pick": 2},
+        {"text": "The new cinematic universe will center on _ as an unlikely hero.", "pick": 1},
+        {"text": "The behind-the-scenes documentary revealed that _ was responsible for everything.", "pick": 1}
+      ]
+    },
+    "existential_dread": {
+      "name": "\ud83d\ude36\u200d\ud83c\udf2b\ufe0f Existential Dread Pack",
+      "description": "For when the void stares back and you have to finish your shift anyway.",
+      "white": ["The persistent feeling that everyone else got a manual you didn't.", "Realizing mid-laugh that nothing matters.", "The 3am certainty that you have wasted your life.", "Free will, but it's actually just neurons firing.", "The version of yourself you gave up on.", "Being a temporary arrangement of atoms that is very stressed about email.", "The slow creep of realizing your parents were just guessing the whole time.", "Looking in the mirror and not recognizing anything.", "The knowledge that the sun will eventually consume the Earth.", "Consciousness as a cruel evolutionary accident.", "The exact moment you stopped believing things would work out.", "A Wikipedia rabbit hole that ends at 'heat death of the universe'.", "All your future memories that will never exist.", "The yawning void behind a customer service smile.", "Trying to remember who you were before the internet.", "The quiet horror of a Sunday afternoon with nothing to do.", "Mortality, presented without comment.", "The suspicion that your entire personality is just coping mechanisms.", "Every door you didn't open.", "The word 'legacy' when applied to yourself.", "Completing your to-do list and feeling absolutely nothing.", "Waving back at someone who was waving at someone else, forever.", "The inexorable passage of time, as experienced in a dentist's waiting room.", "Existential dread wearing a business casual outfit.", "A birthday that made you do math.", "The specific loneliness of being in a crowded room.", "Choosing a career at 17 and living with it at 45.", "The part of your brain that replays your worst moments at 2am.", "Asking 'is this all there is?' and receiving no answer.", "The unsettling sameness of every single day.", "Impermanence, gift-wrapped.", "The growing suspicion that you are the problem.", "Watching your parents get old.", "A nostalgia for a past that wasn't even that good.", "The career path not taken, now occasionally Googled.", "How little anyone will remember you in 200 years.", "The distance between who you are and who you meant to be.", "Time, moving faster every year for no good reason.", "Making peace with something you haven't made peace with.", "The small death of every unreturned phone call.", "Your consciousness, unable to verify it is real.", "The moment you realized you were mortal, and every moment since.", "Staring at a wall and understanding it completely.", "Running out of people who knew the younger version of you.", "The version of your life you sometimes still imagine.", "A late night spent calculating how many weekends you have left.", "The specific grief of an unmade choice.", "Dying before you figure out what the point was.", "The terrifying freedom of being entirely responsible for your own meaning.", "A universe that is not cruel, not kind, and utterly indifferent.", "The half-second before sleep when you remember something you did in 2009.", "Camus, shrugging.", "A Sartre quote used correctly, which makes it worse.", "The Ship of Theseus, applied to your own personality.", "Nietzsche's abyss, now with a Yelp page.", "Kierkegaard's anxiety as a lifestyle brand.", "The question your philosophy professor asked that you still haven't answered.", "Heidegger's 'being-toward-death,' gift-wrapped.", "The part of Pascal's Wager nobody likes to think about.", "Schopenhauer at a birthday party.", "A perfectly ordinary Tuesday that will never happen again.", "Simone de Beauvoir being right about everything.", "The exact moment you became your parents.", "Wittgenstein's silence on the things that cannot be spoken.", "The Absurd, but it's Monday.", "An unanswerable question asked by a child.", "Your oldest unopened email.", "The dream where you're back in school and realize you're also already dead.", "Accepting that your best years may be behind you while still at the buffet.", "The specific ache of a song you loved at 16.", "Every photograph of yourself where you looked happy but weren't.", "The retirement plan you haven't started.", "Looking at baby photos and understanding that person is gone.", "The last conversation you'll ever have with someone, not knowing it's the last.", "Your own handwriting from twenty years ago.", "The hobby you quit right before you would have gotten good at it.", "A to-do list found in a coat pocket from three years ago, all incomplete.", "The person you promised to call back.", "A life insurance form filled out in your own handwriting.", "The exact weight of unlived experience.", "The silence after a house becomes empty.", "A city you grew up in, returned to, and no longer recognized.", "Realizing you can't remember your grandmother's voice.", "The last time you did something for the first time.", "The word 'yet' quietly leaving most of your sentences.", "Running out of road metaphors for life.", "The awareness that you are narrating your own experience in real time.", "Your last coherent thought, whenever that turns out to be.", "Infinite regress, but make it personal.", "The mirror at an angle that shows how you look from behind.", "A god-shaped hole, exactly god-shaped.", "The moment you realized your childhood home was just a house.", "Every apology you rehearsed and never gave.", "Time spent waiting that you cannot get back.", "The version of yourself that died with every decade.", "The strange grief of outgrowing a dream.", "An old journal that reads like someone you'd find annoying now.", "Checking whether you are living or just completing tasks.", "The long pause in the middle of asking 'what's the point?'", "The horizon, which you will never reach, moving with you always."],
+      "black": [
+        {"text": "At the end of the day, we are all just _.", "pick": 1},
+        {"text": "I have come to terms with my mortality. Less so with _.", "pick": 1},
+        {"text": "The philosophers were unable to answer the question of _.", "pick": 1},
+        {"text": "What fills the silence after you stop distracting yourself?", "pick": 1},
+        {"text": "I searched for meaning and found only _.", "pick": 1},
+        {"text": "In the grand tapestry of existence, you are _ and you are running out of time.", "pick": 1},
+        {"text": "The last thing I will think before I die is _.", "pick": 1},
+        {"text": "My therapist says I need to confront _. My therapist is right.", "pick": 1},
+        {"text": "The universe is 13.8 billion years old. You have spent most of that time worrying about _.", "pick": 1},
+        {"text": "What is the shape of a life wasted on _?", "pick": 1},
+        {"text": "Sisyphus had his boulder. I have _.", "pick": 1},
+        {"text": "Deep down, beneath all the noise, there is only _.", "pick": 1},
+        {"text": "In the end, we are remembered for _ and nothing else.", "pick": 1},
+        {"text": "Camus said we must imagine Sisyphus happy. Camus never had to deal with _.", "pick": 1},
+        {"text": "Sartre said hell is other people. He had not yet encountered _.", "pick": 1},
+        {"text": "I asked the void what it all means. The void said _.", "pick": 1},
+        {"text": "The examined life is not worth living if it contains _.", "pick": 1},
+        {"text": "Nietzsche warned us about _. We did not listen.", "pick": 1},
+        {"text": "What is the sound of one hand clapping? What is the sound of _?", "pick": 1},
+        {"text": "The midlife crisis peaked when I bought _ and realized it didn't help.", "pick": 1},
+        {"text": "On my deathbed I will not regret the things I did. I will regret _.", "pick": 1},
+        {"text": "The self is an illusion constructed to cope with _.", "pick": 1},
+        {"text": "Memento mori. Also, _.", "pick": 1},
+        {"text": "I have accepted my mortality. I have not accepted _ and I never will.", "pick": 1},
+        {"text": "What waits for us beyond the void? Probably _.", "pick": 1}
+      ]
+    },
+    "lovecraftian": {
+      "name": "\ud83d\udc19 Cosmic Horror Pack",
+      "description": "Something old. Something patient. Something aware of you now.",
+      "white": ["Something vast and patient, watching from a distance that has no name.", "The geometry of the room, subtly wrong.", "A color that does not exist in the visible spectrum but somehow you have seen it.", "An ancient thing that finds you mildly interesting.", "The drowned city beneath the city beneath your city.", "A sound from below the floorboards that is almost a word.", "The part of the ocean that has never been lit.", "Something with too many joints, moving with purpose.", "The book that changes every time you open it.", "A door in your basement that was not there yesterday and is warm to the touch.", "Stars that have been watching you specifically.", "The thing that follows you only in peripheral vision.", "An entity that does not want to eat you. It wants something far less comfortable.", "A whisper in a language that predates language.", "The recurring dream that is becoming more accurate.", "Sanity as a thin membrane stretched over an infinite dark.", "An old god who does not know you are there, which is the best-case scenario.", "The cultists who seem very happy, which is the most disturbing part.", "Time behaving incorrectly in the basement.", "The lighthouse that signals something that should not be signaled.", "A hand pressed against the other side of the mirror.", "The village where everyone smiles too long after the joke ends.", "Something enormous moving slowly beneath the surface.", "The manuscript that the author destroyed, and it keeps coming back.", "A priest of a god whose name is only safe to say once.", "The fog that came in last Tuesday and brought something with it.", "A face you recognize that has no right to be on that body.", "The ritual that was supposed to close the door.", "The angle at which the shadows fall in that room and no other room.", "A hymn sung in frequencies that loosen the teeth.", "The archive of everything that has ever been forgotten.", "That which dwells in the space between one thought and the next.", "An invitation written in a script that your eyes keep sliding off of.", "The horizon, approaching.", "An archaeologist who found what she was looking for and wishes she hadn't.", "The part of your mind you cannot access and should not try.", "Tendrils of something that has mistaken you for a door.", "A covenant made by your ancestors on behalf of everyone.", "The voice in the static that knows your full name.", "A map that shows places that are not and roads that should not connect.", "The old house that the neighborhood has forgotten to forget.", "Something wearing the shape of what you love.", "An eye the size of a building, briefly visible through cloud cover.", "The correct number of teeth in a human mouth, plus several more.", "A congregation gathered around an absence.", "The signal that the radio has been receiving since 1954.", "A god sleeping under the ice who is beginning to dream.", "The deep place where something ancient decided to wait.", "Something that emerged from the water looking like it had been practicing.", "The last rational thought before understanding.", "Cthulhu, mildly inconvenienced.", "R'lyeh's HOA fees.", "Nyarlathotep in middle management.", "The Necronomicon's table of contents.", "Azathoth, dreaming at the center of all things, utterly unaware.", "Shoggoth as a roommate.", "The Deep Ones' dental plan.", "Dagon's fishing tips.", "Miskatonic University's course catalog.", "Arkham after dark.", "Yog-Sothoth, who is the gate and the key and also somehow your landlord.", "Innsmouth's tourism board.", "The Yellow Sign on a Post-it note.", "The King in Yellow's Yelp review.", "A Ph'nglui mwgl nafh Cthulhu R'lyeh wgah'nagl fhtagn bumper sticker.", "The Colour Out of Space, now available in a paint swatch.", "Herbert West's Reanimator referral program.", "Pickman's model portfolio.", "The Dunwich Horror's babysitter.", "The Shadow Over Innsmouth, but it's a gentrification metaphor.", "Wilbur Whateley at career day.", "The Mi-Go brain canister frequent flyer program.", "The Elder Things' Yelp rating.", "At the Mountains of Madness, but it's a ski resort now.", "A shoggoth that has unionized.", "The Hounds of Tindalos in your corners, because all corners are wrong.", "The Whisperer in Darkness leaving passive-aggressive notes.", "A Great Race of Yith time-share.", "The Shadow Out of Time, as a relatable workday.", "Hastur's preferred mode of communication (don't say his name).", "The Silver Key, used to open something that should stay closed.", "Randolph Carter's gap year.", "The statement of Randolph Carter, exhibit A.", "A byakhee Uber.", "Nyarlathotep's LinkedIn.", "The Black Pharaoh on a Tuesday.", "The Crawling Chaos, crawling specifically toward your inbox.", "Shub-Niggurath's thousand young daycare.", "The Goat with a Thousand Young's PTA meeting.", "An Elder Sign used as a coaster.", "The Plateau of Leng's off-season rates.", "A Dimensional Shambler that only appears during tax season.", "The Fungi from Yuggoth doing content creation.", "The Dreamlands, but the commute is terrible.", "Deep One heritage discovered via 23andMe.", "Cthulhu fhtagn as an out-of-office reply.", "The Church of Starry Wisdom's pledge drive.", "A ghoul with impeccable table manners.", "The Nameless City, finally getting a name (it's Glen).", "Robert Chambers' King in Yellow as required corporate reading."],
+      "black": [
+        {"text": "The investigators found _, which explained everything and helped no one.", "pick": 1},
+        {"text": "That which cannot be named has a preference for _.", "pick": 1},
+        {"text": "The ritual required _ and the willingness to not ask what it was for.", "pick": 1},
+        {"text": "We should not have opened the door. Behind it was _ and also _.", "pick": 2},
+        {"text": "The fishermen of the old village refused to speak of _.", "pick": 1},
+        {"text": "The stars aligned and from the deep there rose _.", "pick": 1},
+        {"text": "The last page of the journal read only: '_ is already here.'", "pick": 1},
+        {"text": "You have been chosen. The choosing involved _.", "pick": 1},
+        {"text": "The thing that came through the door was not _ anymore.", "pick": 1},
+        {"text": "Humanity's greatest mistake was not the bomb, but _.", "pick": 1},
+        {"text": "It does not want to destroy us. It wants _ and that is so much worse.", "pick": 1},
+        {"text": "The archaeologist's final transmission mentioned only _ before the signal cut out.", "pick": 1},
+        {"text": "The mercy of it is that you will not remember _. The horror is that part of you will.", "pick": 1},
+        {"text": "Ph'nglui mwgl nafh Cthulhu R'lyeh wgah'nagl fhtagn, but make it about _.", "pick": 1},
+        {"text": "The Miskatonic University rejected my application due to _.", "pick": 1},
+        {"text": "Cthulhu rose from R'lyeh and his first demand was _.", "pick": 1},
+        {"text": "The Necronomicon's most dangerous chapter is the one about _.", "pick": 1},
+        {"text": "Nyarlathotep walks among us, currently disguised as _.", "pick": 1},
+        {"text": "The Deep Ones will inherit the Earth. They plan to replace _ first.", "pick": 1},
+        {"text": "Even Azathoth, blind idiot god at the center of chaos, would be disturbed by _.", "pick": 1},
+        {"text": "The cultists chanted for hours. What they summoned was _, which was somehow worse.", "pick": 1},
+        {"text": "Herbert West assured me the reanimation was a success. He did not mention _.", "pick": 1},
+        {"text": "The Innsmouth look can be masked with _ and a good hat.", "pick": 1},
+        {"text": "I said Hastur's name three times and what appeared was not Hastur but _.", "pick": 1},
+        {"text": "The stars were finally right. What emerged from the deep wanted only _.", "pick": 1}
       ]
     }
   }
