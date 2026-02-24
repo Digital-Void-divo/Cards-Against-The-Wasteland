@@ -126,6 +126,13 @@ FOOTER_RESERVED = FOOTER_PAD_BOTTOM + FOOTER_H
 
 LOGO_TEXT = "Cards Against the Wasteland"
 
+# ── Avatar Constants ─────────────────────────────────────────────────────────
+
+AVATAR_SIZE          = 120   # diameter on full-size cards
+AVATAR_BORDER        = 6     # ring around the circle
+AVATAR_PAD_RIGHT     = 48    # inset from the card's right edge
+AVATAR_PAD_BOTTOM    = 48    # inset from the card's bottom edge
+AVATAR_BELOW_GAP     = 24    # gap between card bottom and avatar (czar layout)
 
 # ── Design Constants — Hand Size (~35%) ──────────────────────────────────────
 
@@ -181,12 +188,6 @@ def _get_hand_font(text: str, bold: bool = False):
 _logo_cache: dict[str, Image.Image | None] = {}
 
 def _load_pack_logo(pack_id: str, is_black: bool) -> Image.Image | None:
-    """
-    Load the logo variant that contrasts with the card background:
-      - Black card → load {pack_id}_white.png  (white icon on black bg)
-      - White card → load {pack_id}_black.png  (black icon on white bg)
-    Results are cached per variant. Returns RGBA image if found, None otherwise.
-    """
     variant = "white" if is_black else "black"
     cache_key = f"{pack_id}_{variant}"
     if cache_key in _logo_cache:
@@ -213,12 +214,6 @@ def _load_pack_logo(pack_id: str, is_black: bool) -> Image.Image | None:
 def _paste_logo(canvas: Image.Image, pack_id: str,
                 x: int, y: int, target_h: int, max_w: int,
                 is_black: bool = False):
-    """
-    Load the correct logo variant (_white.png for black cards, _black.png
-    for white cards), scale it to target_h tall (preserving aspect ratio,
-    capped at max_w), and composite it onto canvas at (x, y).
-    Returns the width of the pasted logo if found and placed, 0 otherwise.
-    """
     logo = _load_pack_logo(pack_id, is_black)
     if logo is None:
         return 0
@@ -237,6 +232,42 @@ def _paste_logo(canvas: Image.Image, pack_id: str,
     canvas_rgba.paste(logo_scaled, (x, y), logo_scaled)
     canvas.paste(canvas_rgba.convert("RGB"), (0, 0))
     return new_w
+
+
+# ── Avatar Helper ─────────────────────────────────────────────────────────────
+
+def _make_circular_avatar(avatar_bytes: bytes, size: int) -> Image.Image:
+    """Crop avatar bytes into a circular RGBA image of the given diameter."""
+    av = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA").resize(
+        (size, size), Image.LANCZOS)
+    mask = Image.new("L", (size, size), 0)
+    ImageDraw.Draw(mask).ellipse((0, 0, size - 1, size - 1), fill=255)
+    av.putalpha(mask)
+    return av
+
+
+def _paste_circular_avatar(canvas: Image.Image, avatar_bytes: bytes,
+                           cx: int, cy: int,
+                           size: int = AVATAR_SIZE,
+                           border: int = AVATAR_BORDER,
+                           border_color: tuple = (255, 255, 255)):
+    """
+    Composite a bordered circular avatar onto canvas.
+    (cx, cy) is the top-left of the total bounding box (border included).
+    """
+    total = size + border * 2
+    canvas_rgba = canvas.convert("RGBA")
+
+    # Border ring
+    ring = Image.new("RGBA", (total, total), (0, 0, 0, 0))
+    ImageDraw.Draw(ring).ellipse((0, 0, total - 1, total - 1), fill=border_color)
+    canvas_rgba.paste(ring, (cx, cy), ring)
+
+    # Avatar
+    av = _make_circular_avatar(avatar_bytes, size)
+    canvas_rgba.paste(av, (cx + border, cy + border), av)
+
+    canvas.paste(canvas_rgba.convert("RGB"), (0, 0))
 
 
 # ── Text Wrapping ────────────────────────────────────────────────────────────
@@ -291,13 +322,6 @@ def _draw_footer(img, draw, x, y,
                  card_w, card_h, footer_pad_left, footer_pad_bottom,
                  footer_h, logo_font_size, pack_font_size, gap,
                  is_black, pack_id, pack_name):
-    """
-    Draw the footer area of a card.
-    Always draws LOGO_TEXT ("Cards Against the Wasteland") in the correct color.
-    If a pack logo image exists for pack_id, paste it to the left and shift
-    the text to the right of it.
-    If no logo image, draw LOGO_TEXT on line 1 and pack_name on line 2.
-    """
     logo_col = LOGO_BLACK_FG if is_black else LOGO_WHITE_FG
     footer_y = y + card_h - footer_pad_bottom - footer_h
     max_footer_w = card_w - footer_pad_left * 2
@@ -311,18 +335,16 @@ def _draw_footer(img, draw, x, y,
             target_h=footer_h,
             max_w=max_footer_w // 2,
             is_black=is_black)
-        draw = ImageDraw.Draw(img)  # refresh after paste
+        draw = ImageDraw.Draw(img)
 
     logo_font = _load_font(FONT_REG_PATH, logo_font_size)
 
     if logo_w > 0:
-        # Logo was placed — draw LOGO_TEXT to the right of the logo
         text_x = x + footer_pad_left + logo_w + 8
         text_h = logo_font.getbbox(LOGO_TEXT)[3] - logo_font.getbbox(LOGO_TEXT)[1]
         text_y = footer_y + (footer_h - text_h) // 2
         draw.text((text_x, text_y), LOGO_TEXT, fill=logo_col, font=logo_font)
     else:
-        # No logo — text fallback: two lines
         draw.text((x + footer_pad_left, footer_y), LOGO_TEXT, fill=logo_col, font=logo_font)
         if pack_name:
             pack_font = _load_font(FONT_REG_PATH, pack_font_size)
@@ -450,12 +472,9 @@ def _draw_black_card_filled(img, x, y, card_text, answers,
 
     has_blanks = "_" in card_text
 
-    # Build display text
     if not has_blanks:
-        # No blanks — append answers after the question (keep periods)
         full_text = card_text + " " + " ".join(answers)
     else:
-        # Has blanks — fill them in (strip trailing periods from answers)
         full_text = card_text
         for ans in answers:
             full_text = full_text.replace("_", _strip_answer_period(ans), 1)
@@ -463,20 +482,17 @@ def _draw_black_card_filled(img, x, y, card_text, answers,
     lines = _wrap_text(full_text, font, TEXT_AREA_W)
     line_h = font.getbbox("Ag")[3] - font.getbbox("Ag")[1]
 
-    # Build character color map
     color_map = []
     if not has_blanks:
-        # No blanks — card text is white, appended answers are gold (keep periods)
         for ch in card_text:
             color_map.append((ch, False))
-        color_map.append((' ', False))  # space between question and answers
+        color_map.append((' ', False))
         for ans in answers:
             for ch in ans:
                 color_map.append((ch, True))
-            if ans != answers[-1]:  # space between multiple answers
+            if ans != answers[-1]:
                 color_map.append((' ', True))
     else:
-        # Has blanks — replace underscores with answers (strip trailing periods)
         temp = card_text
         answer_texts = [_strip_answer_period(a) for a in answers]
         i = 0
@@ -520,14 +536,36 @@ def _draw_black_card_filled(img, x, y, card_text, answers,
 # ── Public API ───────────────────────────────────────────────────────────────
 
 def render_black_card(card_text: str, pick: int = 1,
-                      pack_id: str = None, pack_name: str = None) -> io.BytesIO:
-    """Render just the black card (round start). Returns BytesIO PNG."""
+                      pack_id: str = None, pack_name: str = None,
+                      avatar_bytes: bytes = None) -> io.BytesIO:
+    """
+    Render just the black card (round start).
+    If avatar_bytes is provided, a circular profile picture of the Card Czar
+    is drawn centred beneath the card.
+    Returns BytesIO PNG.
+    """
     display_text = card_text.replace("_", "_____")
     if pick > 1:
         display_text += f"\n\nPICK {pick}"
-    img = Image.new("RGB", (CARD_W + CANVAS_PAD * 2, CARD_H + CANVAS_PAD * 2), BG_COLOR)
+
+    # Extra canvas height for avatar below the card
+    avatar_total = AVATAR_SIZE + AVATAR_BORDER * 2
+    avatar_section_h = (AVATAR_BELOW_GAP + avatar_total) if avatar_bytes else 0
+
+    canvas_w = CARD_W + CANVAS_PAD * 2
+    canvas_h = CARD_H + CANVAS_PAD * 2 + avatar_section_h
+    img = Image.new("RGB", (canvas_w, canvas_h), BG_COLOR)
+
     _draw_card(img, CANVAS_PAD, CANVAS_PAD, is_black=True, text=display_text,
                bold=True, pack_id=pack_id, pack_name=pack_name)
+
+    if avatar_bytes:
+        ax = (canvas_w - avatar_total) // 2
+        ay = CANVAS_PAD + CARD_H + AVATAR_BELOW_GAP
+        _paste_circular_avatar(img, avatar_bytes, ax, ay,
+                               size=AVATAR_SIZE, border=AVATAR_BORDER,
+                               border_color=(255, 255, 255))
+
     buf = io.BytesIO()
     img.save(buf, format="PNG", optimize=True)
     buf.seek(0)
@@ -542,8 +580,6 @@ def render_judging(card_text: str, pick: int,
                    white_pack_names: list[list[str]] = None) -> io.BytesIO:
     """
     Render black card + all white submission cards.
-    black_pack_id / black_pack_name: for the black card footer.
-    white_pack_ids / white_pack_names: [[pack_id, ...], ...] per submission.
     Returns BytesIO PNG.
     """
     display_text = card_text.replace("_", "_____")
@@ -583,11 +619,26 @@ def render_judging(card_text: str, pick: int,
 
 
 def render_winner(card_text: str, answers: list[str],
-                  pack_id: str = None, pack_name: str = None) -> io.BytesIO:
-    """Render black card with answers filled in gold. Returns BytesIO PNG."""
+                  pack_id: str = None, pack_name: str = None,
+                  avatar_bytes: bytes = None) -> io.BytesIO:
+    """
+    Render black card with answers filled in gold.
+    If avatar_bytes is provided, a circular profile picture with a gold
+    border is drawn snugly in the bottom-right corner of the card.
+    Returns BytesIO PNG.
+    """
     img = Image.new("RGB", (CARD_W + CANVAS_PAD * 2, CARD_H + CANVAS_PAD * 2), BG_COLOR)
     _draw_black_card_filled(img, CANVAS_PAD, CANVAS_PAD, card_text, answers,
                             pack_id=pack_id, pack_name=pack_name)
+
+    if avatar_bytes:
+        avatar_total = AVATAR_SIZE + AVATAR_BORDER * 2
+        ax = CANVAS_PAD + CARD_W - AVATAR_PAD_RIGHT - avatar_total
+        ay = CANVAS_PAD + CARD_H - AVATAR_PAD_BOTTOM - avatar_total
+        _paste_circular_avatar(img, avatar_bytes, ax, ay,
+                               size=AVATAR_SIZE, border=AVATAR_BORDER,
+                               border_color=FILLED_COLOR)  # gold ring for winner
+
     buf = io.BytesIO()
     img.save(buf, format="PNG", optimize=True)
     buf.seek(0)
@@ -601,11 +652,6 @@ def render_hand(cards: list[str],
                 submitted: list[str] = None) -> io.BytesIO:
     """
     Render a player's hand as a 5-column grid of small white cards.
-
-    white_pack_ids:  dict mapping card text -> pack_id  (for logo image lookup)
-    white_pack_names: dict mapping card text -> pack display name (text fallback)
-    pending:   cards selected but not finalized — gold highlight
-    submitted: cards already submitted — dimmed
     Returns BytesIO PNG.
     """
     pending_set   = set(pending or [])
