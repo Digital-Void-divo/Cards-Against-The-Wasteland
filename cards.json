@@ -108,7 +108,7 @@
         {"text": "War! What is it good for?", "pick": 1},
         {"text": "During sex, I like to think about _.", "pick": 1},
         {"text": "What's a girl's best friend?", "pick": 1},
-        {"text": "_ + _ = _.", "pick": 2},
+        {"text": "_ + _ = _.", "pick": 3},
         {"text": "What did the U.S. airdrop to the children of Afghanistan?", "pick": 1},
         {"text": "What helps Obama unwind?", "pick": 1},
         {"text": "What did Vin Diesel eat for dinner?", "pick": 1},
@@ -213,6 +213,28 @@
         {"text": "My sleep paralysis demon is just _ in disguise.", "pick": 1},
         {"text": "If _ had a LinkedIn profile, their top skill would be _.", "pick": 2},
         {"text": "Aliens visited Earth, saw _, and immediately left.", "pick": 1}
+      ]
+    }
+    "server": {
+      "name": "Server Pack",
+      "description": "Server-specific options.",
+      "white": [
+        "Roll a 20 and punch him straight in the balls",
+        "TEXAS",
+        "Capybaras wearing berets",
+        "Dhante",
+        "Tachybara",
+        "Lucidia",
+        "DiVo",
+        "Toasty Katie",
+        "Nyxi"
+      ],
+      "black": [
+        {"text": "A toast from Toasty! Thank you _ for _.", "pick": 2},
+        {"text": "I joined voice, only to become an unfortunate witness for a conversation about _.", "pick": 1},
+        {"text": "What is DiVo making now?", "pick": 1},
+        {"text": "The last thing you see before the world ends: _.", "pick": 1},
+        {"text": "You’re in a cave and an Orc is attacking your friends, what do you do?", "pick": 1}
       ]
     }
   }
