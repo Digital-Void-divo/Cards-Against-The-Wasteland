@@ -214,7 +214,7 @@
         {"text": "If _ had a LinkedIn profile, their top skill would be _.", "pick": 2},
         {"text": "Aliens visited Earth, saw _, and immediately left.", "pick": 1}
       ]
-    }
+    },
     "server": {
       "name": "Server Pack",
       "description": "Server-specific options.",
