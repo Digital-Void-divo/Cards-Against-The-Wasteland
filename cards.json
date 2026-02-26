@@ -170,7 +170,8 @@
         {"text": "I joined voice, only to become an unfortunate witness for a conversation about _.", "pick": 1},
         {"text": "What is DiVo making now?", "pick": 1},
         {"text": "The last thing you see before the world ends: _.", "pick": 1},
-        {"text": "You're in a cave and an Orc is attacking your friends, what do you do?", "pick": 1}
+        {"text": "You're in a cave and an Orc is attacking your friends, what do you do?", "pick": 1},
+        {"text": "May I hug?", "pick": 1}
       ]
     },
     "millennial": {
