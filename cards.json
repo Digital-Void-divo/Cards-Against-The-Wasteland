@@ -1100,6 +1100,12 @@
         "When you drop a log and there's no poo when you wipe"
       ],
       "black": [
+        { "text": "Why does every book I read involve _?",
+          "pick": 1
+        },
+        { "text": "What makes LordText happy?",
+          "pick": 1
+        },
         {
           "text": "I can _ that man, and not in a racist way.",
           "pick": 1
