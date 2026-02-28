@@ -1095,7 +1095,6 @@
         "Tachybara",
         "Lucidia",
         "DiVo",
-        "Toasty Katie",
         "Nyxi",
         "When you drop a log and there's no poo when you wipe"
       ],
@@ -1113,10 +1112,6 @@
         {
           "text": "I never stood a chance against _.",
           "pick": 1
-        },
-        {
-          "text": "A toast from Toasty! Thank you _ for _.",
-          "pick": 2
         },
         {
           "text": "How did Lucidia break her shoulder?",
