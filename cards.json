@@ -1099,6 +1099,9 @@
         "When you drop a log and there's no poo when you wipe"
       ],
       "black": [
+        { "text": "What does the command /buml do?",
+          "pick": 1
+        },
         { "text": "Why does every book I read involve _?",
           "pick": 1
         },
