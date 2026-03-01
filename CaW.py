@@ -1,7 +1,15 @@
 """
-Cards Against Humanity — Discord Bot  v3.0
+Cards Against Humanity — Discord Bot  v3.1
 ============================================
 Fully in-channel with ephemeral interactions. No DMs needed.
+
+New in v3.1:
+  - "Pull From Deck" button lets players draw a random card instead of using hand
+  - Wild Cards: one per 250 white cards (rounded down) at game start — type your own answer (50 chars max)
+  - Judging screen now shows the black card above the white submissions
+  - Offensive Pack added (100 white / 25 black)
+  - Geek Pack expanded to 100 white / 25 black
+  - Absurdist Pack expanded to 100 white / 25 black
 
 Setup:
   1. pip install discord.py
@@ -28,6 +36,11 @@ HAND_SIZE = 10
 MIN_PLAYERS = 3
 DEFAULT_WIN_SCORE = 7
 BLANK = "▬▬▬▬▬"
+
+# Wild Card constants
+WILD_CARD_TEXT = "🃏 WILD CARD — Type your own answer!"
+WILD_CARD_INTERVAL = 250   # one Wild Card per this many white cards (rounded down)
+WILD_MAX_CHARS = 50
 
 # How many recently-used cards (per type) to push to the bottom of new decks.
 RECENT_MEMORY_WHITE = 150
@@ -121,11 +134,16 @@ class CardDB:
 
 
 class Deck:
-    def __init__(self, whites: list[str], blacks: list[dict], preshuffle: bool = True):
+    def __init__(self, whites: list[str], blacks: list[dict], wild_count: int = 0, preshuffle: bool = True):
         self.white_draw    = list(whites)
         self.black_draw    = list(blacks)
         self.white_discard: list[str]  = []
         self.black_discard: list[dict] = []
+
+        # Inject Wild Cards evenly into the white draw pile
+        for _ in range(wild_count):
+            self.white_draw.append(WILD_CARD_TEXT)
+
         if preshuffle:
             random.shuffle(self.white_draw)
             random.shuffle(self.black_draw)
@@ -152,10 +170,24 @@ class Deck:
         return self.black_draw.pop()
 
     def discard_white(self, cards: list[str]):
-        self.white_discard.extend(cards)
+        # Never put Wild Cards back in the discard (they'd recycle forever)
+        self.white_discard.extend(c for c in cards if c != WILD_CARD_TEXT)
 
     def discard_black(self, card: dict):
         self.black_discard.append(card)
+
+    def draw_random_white(self) -> str:
+        """Draw a truly random card from the remaining white draw pile."""
+        if not self.white_draw:
+            if not self.white_discard:
+                raise RuntimeError("No white cards left!")
+            self.white_draw   = self.white_discard
+            self.white_discard = []
+            random.shuffle(self.white_draw)
+        idx = random.randrange(len(self.white_draw))
+        # Swap with last and pop for O(1) removal
+        self.white_draw[idx], self.white_draw[-1] = self.white_draw[-1], self.white_draw[idx]
+        return self.white_draw.pop()
 
 
 # ── Recent-Card Memory ───────────────────────────────────────────────────────
@@ -167,6 +199,8 @@ class ChannelRecent:
 
     def add_whites(self, cards: list[str]):
         for c in cards:
+            if c == WILD_CARD_TEXT:
+                continue
             if c in self.whites:
                 self.whites.remove(c)
             self.whites.append(c)
@@ -223,6 +257,7 @@ class Game:
         self.win_score  = win_score
         self.deck:      Optional[Deck] = None
         self.selected_packs: list[str] = []
+        self.wild_count: int = 0          # number of Wild Cards injected this game
 
         self.white_pack_ids:   dict[str, str] = {}
         self.white_pack_names: dict[str, str] = {}
@@ -297,7 +332,10 @@ class Game:
         random.shuffle(stale_b)
         ordered_blacks = stale_b + fresh_b
 
-        self.deck             = Deck(ordered_whites, ordered_blacks, preshuffle=False)
+        # Calculate Wild Cards: 1 per WILD_CARD_INTERVAL white cards (rounded down)
+        self.wild_count = len(whites) // WILD_CARD_INTERVAL
+        self.deck             = Deck(ordered_whites, ordered_blacks,
+                                     wild_count=self.wild_count, preshuffle=False)
         self.white_pack_ids   = white_pack_ids
         self.white_pack_names = white_pack_names
 
@@ -322,6 +360,14 @@ class Game:
         if card_text in player.hand:
             player.hand.remove(card_text)
             player.pending_picks.append(card_text)
+
+    def submit_wild_by_text(self, player_id: int, wild_slot_index: int, custom_text: str):
+        """Replace the Wild Card placeholder in pending_picks with the typed text."""
+        player = self.players[player_id]
+        # Remove the placeholder from hand
+        if WILD_CARD_TEXT in player.hand:
+            player.hand.remove(WILD_CARD_TEXT)
+        player.pending_picks.append(custom_text)
 
     def finalize_submission(self, player_id: int):
         player = self.players[player_id]
@@ -417,6 +463,9 @@ def in_progress_names(game: Game) -> list[str]:
             and pid not in game.submissions
             and game.players[pid].pending_picks]
 
+def is_wild(card_text: str) -> bool:
+    return card_text == WILD_CARD_TEXT
+
 
 # ── Hand image helper ─────────────────────────────────────────────────────────
 
@@ -438,6 +487,68 @@ def _build_hand_image(game: Game, player: Player) -> discord.File:
     except Exception as e:
         print(f"ERROR rendering hand for {player.name}: {e}")
         raise
+
+
+# ── Wild Card Modal ───────────────────────────────────────────────────────────
+
+class WildCardModal(ui.Modal, title="🃏 Wild Card — Write Your Answer"):
+    answer = ui.TextInput(
+        label="Your answer",
+        placeholder="Up to 50 characters...",
+        max_length=WILD_MAX_CHARS,
+        min_length=1,
+        style=discord.TextStyle.short,
+    )
+
+    def __init__(self, game: Game, player: Player, pick_num: int, total_picks: int,
+                 wild_slot_index: int):
+        super().__init__()
+        self.game            = game
+        self.player          = player
+        self.pick_num        = pick_num
+        self.total_picks     = total_picks
+        self.wild_slot_index = wild_slot_index
+
+    async def on_submit(self, interaction: discord.Interaction):
+        custom_text = self.answer.value.strip()
+        if not custom_text:
+            return await interaction.response.send_message("Answer can't be empty!", ephemeral=True)
+
+        self.game.submit_wild_by_text(self.player.id, self.wild_slot_index, custom_text)
+
+        if self.pick_num >= self.total_picks:
+            self.game.finalize_submission(self.player.id)
+            played     = self.game.submissions[self.player.id]
+            played_str = "\n".join(f"` {i}. ` {c}" for i, c in enumerate(played, 1))
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="✅ Cards Submitted!",
+                    description=f"You played:\n{played_str}",
+                    color=C.GREEN),
+                ephemeral=True)
+            await update_round_status(self.game)
+            if self.game.all_submitted():
+                await begin_judging_phase(self.game)
+        else:
+            ordinals   = {1: "first", 2: "second", 3: "third"}
+            next_num   = self.pick_num + 1
+            next_label = ordinals.get(next_num, f"#{next_num}")
+            picked_so_far = ", ".join(f"**{c}**" for c in self.player.pending_picks)
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title=f"✅ Wild Card {self.pick_num} locked in!",
+                    description=f"You wrote: **{custom_text}**\n\nNow pick your **{next_label}** card.",
+                    color=C.ORANGE),
+                ephemeral=True)
+            next_view  = EphemeralHandSelect(self.game, self.player, next_num, self.total_picks)
+            hand_file  = _build_hand_image(self.game, self.player)
+            bc         = fmt_black(self.game.black_card)
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title=f"🃏 Pick your {next_label} card",
+                    description=f"**Black Card:**\n>>> {bc}\n\n**Already picked:** {picked_so_far}\n\n*Your hand is shown below.*",
+                    color=C.PURPLE).set_image(url="attachment://hand.png"),
+                file=hand_file, view=next_view, ephemeral=True)
 
 
 # ── UI VIEWS ─────────────────────────────────────────────────────────────────
@@ -506,11 +617,16 @@ class PackSelectView(ui.View):
         pack_list  = list(self.selected)
         self.game.setup_deck(pack_list, self.db)
         pack_names = ", ".join(self.db.pack_info(p)["name"] for p in pack_list)
+        wild_note  = (f"\n🃏 **{self.game.wild_count} Wild Card(s)** added to the deck!"
+                      if self.game.wild_count > 0 else "")
         self.stop()
         for child in self.children:
             child.disabled = True
         await interaction.response.edit_message(
-            embed=discord.Embed(title="✅ Packs Locked In!", description=f"**Using:** {pack_names}", color=C.GREEN),
+            embed=discord.Embed(
+                title="✅ Packs Locked In!",
+                description=f"**Using:** {pack_names}{wild_note}",
+                color=C.GREEN),
             view=self)
         self.game.phase = Phase.LOBBY
         lobby_view = LobbyView(self.game, self.db)
@@ -521,17 +637,20 @@ class PackSelectView(ui.View):
     def _build_embed(self) -> discord.Embed:
         total_w    = sum(self.db.pack_info(p)["white_count"] for p in self.selected)
         total_b    = sum(self.db.pack_info(p)["black_count"] for p in self.selected)
+        wild_count = total_w // WILD_CARD_INTERVAL
         pack_names = ", ".join(self.db.pack_info(p)["name"] for p in self.selected)
         lines = []
         for pid in self.db.pack_ids:
             info = self.db.pack_info(pid)
             tick = "✅" if pid in self.selected else "⬜"
             lines.append(f"{tick} **{info['name']}** — {info['white_count']}⬜ {info['black_count']}⬛ — *{info['description']}*")
+        wild_line = (f"\n🃏 **Wild Cards:** {wild_count} (1 per {WILD_CARD_INTERVAL} white cards)"
+                     if wild_count > 0 else "")
         return discord.Embed(
             title="📦 Choose Your Card Packs",
             description="\n".join(lines) +
                         f"\n\n**Selected:** {pack_names}\n"
-                        f"**Total cards:** {total_w}⬜ {total_b}⬛\n\n"
+                        f"**Total cards:** {total_w}⬜ {total_b}⬛{wild_line}\n\n"
                         f"*Toggle packs above, then click **Confirm**.*",
             color=C.BLUE)
 
@@ -554,7 +673,8 @@ class LobbyView(ui.View):
             pack_names = ", ".join(self.db.pack_info(p)["name"] for p in self.game.selected_packs)
             total_w    = sum(self.db.pack_info(p)["white_count"] for p in self.game.selected_packs)
             total_b    = sum(self.db.pack_info(p)["black_count"] for p in self.game.selected_packs)
-            pack_line  = f"\n📦 **Packs:** {pack_names} ({total_w}⬜ {total_b}⬛)"
+            wild_part  = (f" + {self.game.wild_count}🃏" if self.game.wild_count > 0 else "")
+            pack_line  = f"\n📦 **Packs:** {pack_names} ({total_w}⬜{wild_part} {total_b}⬛)"
         embed = discord.Embed(
             title="🃏 Cards Against Humanity",
             description=f"**{self.game.host.display_name}** is hosting!\n\n"
@@ -604,11 +724,77 @@ class EphemeralHandSelect(ui.View):
 
         ordinals = {1: "first", 2: "second", 3: "third"}
         label    = "Pick a card" if total_picks == 1 else f"Pick your {ordinals.get(pick_num, f'#{pick_num}')} card"
-        options  = [discord.SelectOption(label=trunc(c, 95), value=str(i), emoji="🃏")
+        options  = [discord.SelectOption(
+                        label=trunc(c, 95) if not is_wild(c) else "🃏 WILD CARD — Write your own!",
+                        value=str(i),
+                        emoji="✏️" if is_wild(c) else "🃏")
                     for i, c in enumerate(player.hand)]
         sel          = ui.Select(placeholder=label, min_values=1, max_values=1, options=options[:25])
         sel.callback = self.on_select
         self.add_item(sel)
+
+    async def on_pull_from_deck(self, interaction: discord.Interaction):
+        if self.done:
+            return await interaction.response.send_message("Already submitted!", ephemeral=True)
+        if interaction.user.id != self.player.id:
+            return await interaction.response.send_message("This isn't your hand!", ephemeral=True)
+
+        try:
+            drawn = self.game.deck.draw_random_white()
+        except RuntimeError:
+            return await interaction.response.send_message("No cards left in the deck to pull!", ephemeral=True)
+
+        # If pulled card is a Wild Card, open the modal immediately
+        if is_wild(drawn):
+            self.done = True
+            self.stop()
+            modal = WildCardModal(self.game, self.player, self.pick_num, self.total_picks,
+                                  wild_slot_index=len(self.player.pending_picks))
+            modal.answer.label = f"Wild Card — Pick {self.pick_num} of {self.total_picks}"
+            return await interaction.response.send_modal(modal)
+
+        self.game.submit_card_by_value.__func__  # ensure it's the right method
+        # Manually add the drawn card to pending (it wasn't in hand)
+        self.player.pending_picks.append(drawn)
+        self.game._seen_whites.add(drawn)
+
+        if self.pick_num >= self.total_picks:
+            self.game.finalize_submission(self.player.id)
+            self.done = True
+            self.stop()
+            played     = self.game.submissions[self.player.id]
+            played_str = "\n".join(f"` {i}. ` {c}" for i, c in enumerate(played, 1))
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title="✅ Cards Submitted! (Pulled from deck)",
+                    description=f"You pulled and played:\n{played_str}",
+                    color=C.GREEN),
+                view=None)
+            await update_round_status(self.game)
+            if self.game.all_submitted():
+                await begin_judging_phase(self.game)
+        else:
+            self.done = True
+            self.stop()
+            ordinals      = {1: "first", 2: "second", 3: "third"}
+            next_num      = self.pick_num + 1
+            next_label    = ordinals.get(next_num, f"#{next_num}")
+            picked_so_far = ", ".join(f"**{c}**" for c in self.player.pending_picks)
+            await interaction.response.edit_message(
+                embed=discord.Embed(
+                    title=f"🎲 Pulled from deck — Card {self.pick_num} locked in!",
+                    description=f"You pulled: **{drawn}**\n\nNow pick your **{next_label}** card below.",
+                    color=C.ORANGE),
+                view=None)
+            next_view  = EphemeralHandSelect(self.game, self.player, next_num, self.total_picks)
+            hand_file  = _build_hand_image(self.game, self.player)
+            bc         = fmt_black(self.game.black_card)
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title=f"🃏 Pick your {next_label} card",
+                    description=f"**Black Card:**\n>>> {bc}\n\n**Already pulled/picked:** {picked_so_far}\n\n*Your hand is shown below.*",
+                    color=C.PURPLE).set_image(url="attachment://hand.png"),
+                file=hand_file, view=next_view, ephemeral=True)
 
     async def on_select(self, interaction: discord.Interaction):
         if self.done:
@@ -619,6 +805,16 @@ class EphemeralHandSelect(ui.View):
             return await interaction.response.send_message("Invalid card.", ephemeral=True)
 
         card_text = self.player.hand[idx]
+
+        # Wild Card → open modal for custom text
+        if is_wild(card_text):
+            self.done = True
+            self.stop()
+            modal = WildCardModal(self.game, self.player, self.pick_num, self.total_picks,
+                                  wild_slot_index=idx)
+            modal.answer.label = f"Wild Card — Pick {self.pick_num} of {self.total_picks}"
+            return await interaction.response.send_modal(modal)
+
         self.game.submit_card_by_value(self.player.id, card_text)
 
         if self.pick_num >= self.total_picks:
@@ -664,7 +860,7 @@ class RoundPlayView(ui.View):
         super().__init__(timeout=None)
         self.game = game
 
-    @ui.button(label="Play Card(s)", style=discord.ButtonStyle.green, emoji="🃏")
+    @ui.button(label="Play Card(s)", style=discord.ButtonStyle.green, emoji="🃏", row=0)
     async def play_btn(self, interaction: discord.Interaction, button: ui.Button):
         game = self.game
         uid  = interaction.user.id
@@ -713,7 +909,74 @@ class RoundPlayView(ui.View):
             embed.set_footer(text="Select a card from the dropdown below.")
         await interaction.response.send_message(embed=embed, file=hand_file, view=view, ephemeral=True)
 
-    @ui.button(label="View Hand", style=discord.ButtonStyle.gray, emoji="👁️")
+    @ui.button(label="Pull From Deck", style=discord.ButtonStyle.blurple, emoji="🎲", row=0)
+    async def pull_btn(self, interaction: discord.Interaction, button: ui.Button):
+        game = self.game
+        uid  = interaction.user.id
+
+        if uid not in game.players:
+            return await interaction.response.send_message("You're not in this game!", ephemeral=True)
+        if game.phase != Phase.PLAYING:
+            return await interaction.response.send_message("It's not time to play cards right now.", ephemeral=True)
+        if uid == game.czar_id:
+            return await interaction.response.send_message(
+                "🎩 You're the **Card Czar** this round!\nSit back and wait — you'll judge once everyone submits.",
+                ephemeral=True)
+        if uid in game.submissions:
+            played     = game.submissions[uid]
+            played_str = "\n".join(f"` {i}. ` {c}" for i, c in enumerate(played, 1))
+            return await interaction.response.send_message(
+                embed=discord.Embed(title="✅ Already Submitted", description=f"Your cards this round:\n{played_str}", color=C.GREEN),
+                ephemeral=True)
+
+        player      = game.players[uid]
+        total_picks = game.black_card["pick"]
+        pick_num    = len(player.pending_picks) + 1
+
+        try:
+            drawn = game.deck.draw_random_white()
+        except RuntimeError:
+            return await interaction.response.send_message("No cards left in the deck to pull!", ephemeral=True)
+
+        # Wild Card pulled — open the modal immediately
+        if is_wild(drawn):
+            modal = WildCardModal(game, player, pick_num, total_picks,
+                                  wild_slot_index=len(player.pending_picks))
+            modal.answer.label = f"Wild Card — Pick {pick_num} of {total_picks}"
+            return await interaction.response.send_modal(modal)
+
+        player.pending_picks.append(drawn)
+        game._seen_whites.add(drawn)
+
+        if pick_num >= total_picks:
+            game.finalize_submission(uid)
+            played     = game.submissions[uid]
+            played_str = "\n".join(f"` {i}. ` {c}" for i, c in enumerate(played, 1))
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="✅ Cards Submitted! (Pulled from deck)",
+                    description=f"You pulled and played:\n{played_str}",
+                    color=C.GREEN),
+                ephemeral=True)
+            await update_round_status(game)
+            if game.all_submitted():
+                await begin_judging_phase(game)
+        else:
+            ordinals      = {1: "first", 2: "second", 3: "third"}
+            next_num      = pick_num + 1
+            next_label    = ordinals.get(next_num, f"#{next_num}")
+            picked_so_far = ", ".join(f"**{c}**" for c in player.pending_picks)
+            bc            = fmt_black(game.black_card)
+            next_view     = EphemeralHandSelect(game, player, next_num, total_picks)
+            hand_file     = _build_hand_image(game, player)
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title=f"🎲 Pulled: **{drawn}** — now pick your {next_label} card",
+                    description=f"**Black Card:**\n>>> {bc}\n\n**Already pulled/picked:** {picked_so_far}\n\n*Your hand is shown below.*",
+                    color=C.ORANGE).set_image(url="attachment://hand.png"),
+                file=hand_file, view=next_view, ephemeral=True)
+
+    @ui.button(label="View Hand", style=discord.ButtonStyle.gray, emoji="👁️", row=0)
     async def view_btn(self, interaction: discord.Interaction, button: ui.Button):
         game = self.game
         uid  = interaction.user.id
@@ -727,6 +990,13 @@ class RoundPlayView(ui.View):
         hand_file = _build_hand_image(game, player)
         embed     = discord.Embed(title="👁️ Your Hand", color=C.WHITE)
         embed.set_image(url="attachment://hand.png")
+
+        # Summarise wild cards in hand
+        wild_count = sum(1 for c in player.hand if is_wild(c))
+        if wild_count:
+            embed.add_field(name="🃏 Wild Cards in hand",
+                            value=f"You have **{wild_count}** Wild Card(s). Select one to type a custom answer!",
+                            inline=False)
 
         if uid in game.submissions:
             played = game.submissions[uid]
@@ -931,7 +1201,10 @@ async def begin_judging_phase(game: Game):
         white_pack_names=[[game.white_pack_names.get(c, "") for c in cards] for cards in submission_cards])
     card_file = discord.File(judging_img, filename="judging.png")
 
+    # ── Black card shown ABOVE the white submissions ──
+    bc_text = fmt_black(game.black_card)
     embed = discord.Embed(title="⚖️ All Cards Are In!", color=C.PURPLE)
+    embed.add_field(name="⬛ Black Card", value=f">>> {bc_text}", inline=False)
     embed.set_image(url="attachment://judging.png")
 
     subs_text = ""
@@ -976,9 +1249,12 @@ async def cah_help(ctx: commands.Context):
     embed.add_field(name="🎴 Playing", inline=False, value=(
         "Click **Play Card(s)** — your hand appears as a card image, privately.\n"
         "Pick-2 cards are submitted one at a time in order.\n"
+        "🎲 **Pull From Deck** — skip your hand and draw a random card from the deck.\n"
+        "🃏 **Wild Cards** — one per 250 white cards; lets you type any answer (50 chars).\n"
         "Only you can see your hand!"))
     embed.add_field(name="🎩 Judging", inline=False, value=(
         "The Card Czar clicks **Pick the Winner** for a private dropdown.\n"
+        "The black card is shown above all submissions so context is always visible.\n"
         "The winner is then revealed to everyone."))
     embed.add_field(name="📊 Management", inline=False, value=(
         "`!cah status` — Scores & round info\n"
@@ -999,7 +1275,7 @@ async def cah_cards(ctx: commands.Context):
         embed.add_field(name=info["name"],
                         value=f"{info['white_count']}⬜ • {info['black_count']}⬛\n*{info['description']}*",
                         inline=False)
-    embed.set_footer(text=f"Total: {cards_db.total_white}⬜ {cards_db.total_black}⬛ • Edit cards.json to add more!")
+    embed.set_footer(text=f"Total: {cards_db.total_white}⬜ {cards_db.total_black}⬛ • 1 Wild Card per {WILD_CARD_INTERVAL} white cards • Edit cards.json to add more!")
     await ctx.send(embed=embed)
 
 
